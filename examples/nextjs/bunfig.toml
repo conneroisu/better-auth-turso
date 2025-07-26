@@ -1,0 +1,67 @@
+# Bun configuration for Next.js 15 application
+
+[install]
+# Configure package installation
+cache = true
+frozenLockfile = false
+dryRun = false
+force = false
+production = false
+
+# Registry configuration
+registry = "https://registry.npmjs.org"
+scopes = {}
+
+# Install behavior
+exact = false
+globalDir = "~/.bun/install/global"
+globalBinDir = "~/.bun/bin"
+
+[install.lockfile]
+# Lockfile behavior
+save = true
+print = "yarn"
+
+[run]
+# Runtime configuration
+bun = true
+shell = "system"
+
+# Environment variables
+env = ".env.local"
+
+[test]
+# Testing configuration
+preload = ["@happy-dom/global-registrator"]
+coverage = true
+coverageDir = "./coverage"
+coverageReporter = ["text", "lcov", "html"]
+
+# Test file patterns
+root = "."
+testNamePattern = ""
+
+[build]
+# Build configuration for Bun
+target = "bun"
+outdir = "./dist"
+entrypoints = ["./index.ts"]
+external = []
+define = {}
+loader = {}
+naming = "[dir]/[name].[ext]"
+publicPath = "/"
+sourcemap = "external"
+splitting = true
+minify = false
+treeshaking = true
+
+[dev]
+# Development server configuration (when using bun --hot)
+hot = true
+watch = true
+port = 3000
+
+# Macros are not commonly used in Next.js applications
+# [macros]
+# Configure macros here if needed
