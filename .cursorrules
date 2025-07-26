@@ -1,0 +1,185 @@
+# Better Auth Turso Adapter - Cursor Rules
+
+You are an expert TypeScript developer specializing in database adapters, Better Auth integration, and Turso/libSQL databases.
+
+## Project Context
+
+This is a **Better Auth Turso adapter** - a database adapter that enables Better Auth to work with Turso databases (built on libSQL). The adapter provides full compatibility with Better Auth features including sessions, users, accounts, and verification tokens.
+
+## Core Architecture
+
+- **Main adapter**: `src/index.ts` contains the `tursoAdapter` function and core implementation
+- **Database operations**: Uses `@libsql/client` for all database interactions with automatic table creation and column management
+- **Type safety**: Full TypeScript support with proper type inference
+- **Testing strategy**: Comprehensive test suite including unit, integration, property-based, and performance tests
+
+## Technology Stack & Dependencies
+
+**Core Dependencies:**
+- `@libsql/client`: Turso/libSQL database client (NEVER use `better-sqlite3`)
+- `better-auth`: Peer dependency for adapter interface
+- `vitest`: Testing framework (NOT Jest or Bun test)
+- `fast-check`: Property-based testing library
+
+**Development Tools:**
+- TypeScript with strict mode disabled for flexibility
+- ESLint with TypeScript parser
+- Prettier for code formatting
+- Multiple Vitest configurations for different test types
+
+## Development Commands
+
+**Building:**
+```bash
+npm run build          # Compile TypeScript to dist/
+npm run dev           # Watch mode compilation  
+npm run typecheck     # Type checking without compilation
+```
+
+**Testing:**
+```bash
+npm run test              # Run all tests with vitest
+npm run test:watch        # Watch mode for tests
+npm run test:coverage     # Generate coverage report
+npm run test:integration  # Integration tests only
+npm run test:unit        # Unit tests only  
+npm run test:property    # Property-based tests only
+npm run test:run         # Single test run (no watch)
+```
+
+**Code Quality:**
+```bash
+npm run lint          # ESLint checking
+npm run lint:fix      # Fix ESLint issues
+npm run format        # Format with Prettier
+npm run format:check  # Check formatting
+npm run check         # Run typecheck + lint + format:check
+npm run precommit     # Full check + test run
+```
+
+## Code Guidelines
+
+### TypeScript Standards
+- Use explicit types where beneficial for clarity
+- Prefer type safety but allow flexibility where TypeScript strict mode is disabled
+- Use meaningful variable and function names that clearly indicate purpose
+- Follow existing naming conventions in the codebase
+
+### Better Auth Adapter Implementation
+- The adapter MUST implement all required Better Auth adapter interface methods
+- Support dynamic table creation for user, session, account, verification models
+- Handle dynamic column management for new fields automatically
+- Implement proper data serialization between JavaScript types and SQLite values
+- Support embedded replicas (local SQLite files that sync to remote Turso)
+- Provide configurable debug logging for all adapter operations
+
+### Database Operations
+- Always use `@libsql/client` for database operations
+- Implement proper error handling for all database operations
+- Use parameterized queries to prevent SQL injection
+- Handle type conversion between JavaScript and SQLite properly
+- Support both remote Turso databases and local SQLite files
+
+### Testing Requirements
+- Write comprehensive tests for all adapter methods
+- Include unit tests for individual functions
+- Include integration tests with actual Better Auth usage
+- Use property-based testing with `fast-check` for edge cases
+- Include performance tests for database operations
+- All tests should have 30-60 second timeout due to database operations
+- Integration tests require longer timeout (60s)
+
+### Performance Considerations
+- Design for performance early - consider database query efficiency
+- Use batching for multiple operations where possible
+- Implement proper connection management
+- Consider indexing requirements for Better Auth queries
+- Monitor and optimize slow database operations
+
+### Error Handling
+- Provide explicit, meaningful error messages for all failure cases
+- Handle database connection failures gracefully
+- Validate inputs and provide clear validation errors
+- Use proper error types and error propagation
+- Include debugging information when debug logging is enabled
+
+### Code Style (Your Style Philosophy)
+**Safety:**
+- Write code that works in all situations and reduces risk of errors
+- Use explicit bounds checking and input validation
+- Handle edge cases and error conditions properly
+- Assert function arguments and return values where critical
+
+**Performance:**
+- Optimize for database query efficiency and minimize round trips  
+- Use appropriate data structures for the use case
+- Profile and optimize bottlenecks in database operations
+- Design database schema and queries for performance
+
+**Developer Experience:**
+- Use clear, descriptive names for functions, variables, and types
+- Keep functions focused and under 70 lines where possible
+- Document complex logic and unusual approaches with comments
+- Structure code logically with related functionality grouped together
+
+## File Structure & Organization
+```
+src/
+├── index.ts                          # Main adapter implementation
+├── test-setup.ts                     # Test configuration
+├── adapter.test.ts                   # Basic adapter tests
+├── integration.test.ts               # Better Auth integration tests
+├── turso-adapter.unit.test.ts        # Unit tests
+├── turso-adapter.integration.test.ts # Database integration tests
+├── turso-adapter.performance.test.ts # Performance tests
+├── turso-adapter.property.test.ts    # Property-based tests
+├── turso-adapter.error.test.ts       # Error handling tests
+└── numeric-id.test.ts                # Numeric ID support tests
+```
+
+## Configuration Files
+- `vitest.config.ts` - Main test configuration with happy-dom environment
+- `vitest.integration.config.ts` - Integration tests with node environment  
+- `vitest.unit.config.ts` - Unit tests only
+- `vitest.property.config.ts` - Property-based tests only
+- `tsconfig.json` - TypeScript configuration with ESNext target
+- `eslint.config.js` - ESLint configuration
+- `package.json` - Project dependencies and scripts
+
+## Better Auth Integration Details
+- The adapter must pass the official Better Auth adapter test suite
+- Support all standard Better Auth models (user, session, account, verification)
+- Handle custom fields through dynamic column creation
+- Serialize/deserialize JSON and complex data types automatically
+- Support both string and numeric ID types
+- Implement proper session management and expiration
+- Handle authentication provider account linking
+
+## Common Tasks
+- When adding new features, ensure comprehensive test coverage
+- Always run `npm run check` before committing changes
+- Use the existing test patterns for consistency
+- Follow the established error handling patterns
+- Add debug logging for new database operations
+- Update TypeScript types for new configuration options
+
+## Do Not
+- Use `better-sqlite3` instead of `@libsql/client`
+- Use Jest or Bun test instead of Vitest
+- Ignore TypeScript types even when strict mode is disabled
+- Skip comprehensive testing for database operations
+- Hardcode database schemas (use dynamic creation)
+- Forget to handle serialization/deserialization of complex types
+- Skip error handling for database operations
+- Create breaking changes to the adapter interface
+
+## AI Instructions
+When generating code:
+1. Always consider the Better Auth adapter interface requirements
+2. Implement proper error handling and meaningful error messages
+3. Include appropriate TypeScript types
+4. Follow the established patterns in the existing codebase
+5. Add comprehensive tests for new functionality
+6. Consider performance implications of database operations
+7. Document complex logic with clear comments
+8. Ensure compatibility with both remote Turso and local SQLite databases
