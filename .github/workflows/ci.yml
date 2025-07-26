@@ -145,7 +145,7 @@ jobs:
 
       - name: Install example dependencies
         run: |
-          cd examples/nextjs
+          cd examples/nextjs-app
           bun install --frozen-lockfile
 
       - name: Build adapter
