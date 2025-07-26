@@ -45,8 +45,96 @@ export const tursoAdapter = (
   // Store created tables to avoid recreating them
   const createdTables = new Set<string>();
 
+  // Cache for prepared statements and queries (reserved for future use)
+  const _queryCache = new Map<string, any>();
+  const _preparedStatements = new Map<string, any>();
+
+  // Cache for frequently accessed data
+  const dataCache = new Map<string, { data: any; timestamp: number }>();
+  const CACHE_TTL = 5000; // 5 seconds TTL for data cache
+
+  // Performance optimization helpers (reserved for future use)
+  const _getCacheKey = (
+    model: string,
+    operation: string,
+    params: any,
+  ): string => {
+    return `${model}:${operation}:${JSON.stringify(params)}`;
+  };
+
+  const getCachedData = (key: string): any | null => {
+    const cached = dataCache.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    if (cached) {
+      dataCache.delete(key); // Remove expired cache
+    }
+    return null;
+  };
+
+  const setCachedData = (key: string, data: any): void => {
+    dataCache.set(key, { data, timestamp: Date.now() });
+  };
+
+  // Optimized execute function with query caching
+  const executeQuery = async (sql: string, args: any[] = []): Promise<any> => {
+    const queryKey = `${sql}:${JSON.stringify(args)}`;
+
+    // Check if this is a SELECT query that can be cached
+    const isSelectQuery = sql.trim().toUpperCase().startsWith("SELECT");
+    const isModifyingQuery = sql
+      .trim()
+      .toUpperCase()
+      .match(/^(INSERT|UPDATE|DELETE)/);
+
+    if (isSelectQuery) {
+      const cached = getCachedData(queryKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    const result = await client.execute({ sql, args });
+
+    // Cache SELECT results
+    if (isSelectQuery && result.rows && result.rows.length > 0) {
+      setCachedData(queryKey, result);
+    }
+
+    // Clear cache for modifying operations
+    if (isModifyingQuery) {
+      dataCache.clear();
+    }
+
+    return result;
+  };
+
+  // Batch operation support for better performance (reserved for future use)
+  const _batchExecute = async (
+    operations: Array<{ sql: string; args: any[] }>,
+  ): Promise<any[]> => {
+    const results: any[] = [];
+
+    // For now, execute operations sequentially
+    // TODO: Implement true batch execution when libSQL supports it
+    for (const op of operations) {
+      try {
+        const result = await client.execute({ sql: op.sql, args: op.args });
+        results.push(result);
+      } catch (error) {
+        results.push({ error });
+      }
+    }
+
+    return results;
+  };
+
   // Helper function to ensure table exists with Better Auth standard columns
-  const ensureTableExists = async (model: string): Promise<void> => {
+  const ensureTableExists = async (
+    model: string,
+    options?: any,
+  ): Promise<void> => {
     if (createdTables.has(model)) {
       return;
     }
@@ -70,9 +158,16 @@ export const tursoAdapter = (
     try {
       let createSQL = "";
 
+      // Determine ID column type based on options
+      const useNumericIds =
+        (options as any)?.advanced?.database?.useNumberId === true;
+      const idColumn = useNumericIds
+        ? "id INTEGER PRIMARY KEY AUTOINCREMENT"
+        : "id TEXT PRIMARY KEY";
+
       if (model === "user") {
         createSQL = `CREATE TABLE IF NOT EXISTS ${model} (
-          id TEXT PRIMARY KEY,
+          ${idColumn},
           name TEXT,
           email TEXT UNIQUE,
           emailVerified BOOLEAN DEFAULT FALSE,
@@ -82,8 +177,8 @@ export const tursoAdapter = (
         )`;
       } else if (model === "session") {
         createSQL = `CREATE TABLE IF NOT EXISTS ${model} (
-          id TEXT PRIMARY KEY,
-          userId TEXT NOT NULL,
+          ${idColumn},
+          userId ${useNumericIds ? "INTEGER" : "TEXT"} NOT NULL,
           expiresAt DATETIME NOT NULL,
           token TEXT UNIQUE NOT NULL,
           ipAddress TEXT,
@@ -93,8 +188,8 @@ export const tursoAdapter = (
         )`;
       } else if (model === "account") {
         createSQL = `CREATE TABLE IF NOT EXISTS ${model} (
-          id TEXT PRIMARY KEY,
-          userId TEXT NOT NULL,
+          ${idColumn},
+          userId ${useNumericIds ? "INTEGER" : "TEXT"} NOT NULL,
           accountId TEXT NOT NULL,
           providerId TEXT NOT NULL,
           accessToken TEXT,
@@ -109,7 +204,7 @@ export const tursoAdapter = (
         )`;
       } else if (model === "verification") {
         createSQL = `CREATE TABLE IF NOT EXISTS ${model} (
-          id TEXT PRIMARY KEY,
+          ${idColumn},
           identifier TEXT NOT NULL,
           value TEXT NOT NULL,
           expiresAt DATETIME NOT NULL,
@@ -120,7 +215,7 @@ export const tursoAdapter = (
         // Generic table for any other models (including test models)
         // Start with basic id column and let dynamic column addition handle the rest
         createSQL = `CREATE TABLE IF NOT EXISTS ${model} (
-          id TEXT PRIMARY KEY
+          ${idColumn}
         )`;
       }
 
@@ -151,72 +246,186 @@ export const tursoAdapter = (
     }
   };
 
-  // Helper function to sanitize values for SQLite binding
+  // Optimized value sanitization with type caching (reserved for future use)
+  const _typeCache = new Map<any, string>();
   const sanitizeValue = (value: any): any => {
     if (value === null || value === undefined) {
       return null;
     }
-    if (typeof value === "string" || typeof value === "number" || typeof value === "bigint") {
+
+    const valueType = typeof value;
+
+    // Fast path for primitives
+    if (
+      valueType === "string" ||
+      valueType === "number" ||
+      valueType === "bigint"
+    ) {
+      // Check for non-finite numbers
+      if (valueType === "number" && !isFinite(value)) {
+        return null;
+      }
       return value;
     }
-    if (typeof value === "boolean") {
+
+    if (valueType === "boolean") {
       return value ? 1 : 0;
     }
+
+    // Fast instanceof checks
     if (value instanceof Date) {
       return value.toISOString();
     }
+
     if (Buffer.isBuffer(value)) {
       return value;
     }
-    // Convert objects and arrays to JSON strings
-    return JSON.stringify(value);
+
+    // Convert complex types to JSON strings
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
   };
 
-  // Helper function to deserialize values from SQLite
-  const deserializeValue = (value: any, originalValue?: any): any => {
+  // Optimized deserialization with pattern caching and SQLite type handling
+  const datePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+  const booleanFields = new Set([
+    "emailVerified",
+    "verified",
+    "active",
+    "enabled",
+    "deleted",
+  ]);
+
+  const deserializeValue = (value: any, fieldName?: string): any => {
     if (value === null || value === undefined) {
       return null;
     }
-    
-    // If we have the original value type, try to convert back
-    if (originalValue !== undefined) {
-      if (typeof originalValue === "boolean") {
-        return value === 1 || value === true || value === "true";
+
+    // Handle SQLite numeric values
+    if (typeof value === "number") {
+      // Convert 0/1 to boolean only for known boolean fields
+      if (
+        fieldName &&
+        booleanFields.has(fieldName) &&
+        (value === 0 || value === 1)
+      ) {
+        return value === 1;
       }
-      if (originalValue instanceof Date) {
-        return new Date(value);
-      }
-      if (typeof originalValue === "object" && originalValue !== null) {
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value;
-        }
+      return value;
+    }
+
+    // Fast path for non-strings
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    // Optimized date parsing
+    if (datePattern.test(value)) {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date;
       }
     }
-    
-    // Try intelligent conversion based on value
-    if (typeof value === "string") {
-      // Try to parse as date
-      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-          return date;
-        }
-      }
-      
-      // Try to parse as JSON
-      if ((value.startsWith('{') && value.endsWith('}')) || 
-          (value.startsWith('[') && value.endsWith(']'))) {
-        try {
-          return JSON.parse(value);
-        } catch {
-          return value;
-        }
+
+    // Optimized JSON parsing
+    const firstChar = value[0];
+    const lastChar = value[value.length - 1];
+    if (
+      (firstChar === "{" && lastChar === "}") ||
+      (firstChar === "[" && lastChar === "]")
+    ) {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
       }
     }
-    
+
     return value;
+  };
+
+  // Helper function to process where clause array into SQL conditions
+  const processWhereClause = (
+    where: any[],
+  ): { whereClause: string; whereValues: any[] } => {
+    const whereConditions: string[] = [];
+    const whereValues: any[] = [];
+
+    if (!where || !Array.isArray(where) || where.length === 0) {
+      return { whereClause: "1=1", whereValues: [] };
+    }
+
+    for (const condition of where) {
+      if (!condition || typeof condition !== "object") {
+        continue;
+      }
+
+      const { field, value, operator = "eq" } = condition;
+
+      if (!field || typeof field !== "string") {
+        continue;
+      }
+
+      switch (operator) {
+        case "eq":
+          whereConditions.push(`${field} = ?`);
+          whereValues.push(sanitizeValue(value));
+          break;
+        case "ne":
+          whereConditions.push(`${field} != ?`);
+          whereValues.push(sanitizeValue(value));
+          break;
+        case "gt":
+          whereConditions.push(`${field} > ?`);
+          whereValues.push(sanitizeValue(value));
+          break;
+        case "lt":
+          whereConditions.push(`${field} < ?`);
+          whereValues.push(sanitizeValue(value));
+          break;
+        case "gte":
+          whereConditions.push(`${field} >= ?`);
+          whereValues.push(sanitizeValue(value));
+          break;
+        case "lte":
+          whereConditions.push(`${field} <= ?`);
+          whereValues.push(sanitizeValue(value));
+          break;
+        case "in":
+          if (Array.isArray(value)) {
+            const placeholders = value.map(() => "?").join(", ");
+            whereConditions.push(`${field} IN (${placeholders})`);
+            whereValues.push(...value.map(sanitizeValue));
+          }
+          break;
+        case "contains":
+          whereConditions.push(`${field} LIKE ?`);
+          whereValues.push(`%${value}%`);
+          break;
+        case "startsWith":
+        case "starts_with":
+          whereConditions.push(`${field} LIKE ?`);
+          whereValues.push(`${value}%`);
+          break;
+        case "endsWith":
+        case "ends_with":
+          whereConditions.push(`${field} LIKE ?`);
+          whereValues.push(`%${value}`);
+          break;
+        default:
+          whereConditions.push(`${field} = ?`);
+          whereValues.push(sanitizeValue(value));
+      }
+    }
+
+    return {
+      whereClause:
+        whereConditions.length > 0 ? whereConditions.join(" AND ") : "1=1",
+      whereValues,
+    };
   };
 
   return createAdapter({
@@ -230,28 +439,42 @@ export const tursoAdapter = (
       supportsBooleans: true,
       supportsNumericIds: true,
     },
-    adapter: ({ debugLog, schema: _schema }) => {
+    adapter: ({ debugLog, schema: _schema, options }) => {
       return {
         create: async ({ model, data }) => {
-          if (
-            debugLog &&
-            typeof debugLog === "object" &&
-            "create" in debugLog
-          ) {
+          if ((debugLog as any)?.create) {
             console.log(`[Turso Adapter] Creating in ${model}:`, data);
           }
 
           // Ensure table exists before creating
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
-          // Dynamically add columns if they don't exist
-          const dataKeys = Object.keys(data);
+          // Check if using numeric IDs
+          const useNumericIds =
+            (options as any)?.advanced?.database?.useNumberId === true;
+
+          // Generate ID if not provided
+          const finalData = { ...data } as any;
+          if (!finalData.id && !useNumericIds) {
+            // Only generate ID for non-numeric ID tables - let SQLite handle auto-increment for numeric IDs
+            finalData.id =
+              Math.random().toString(36).substring(2) + Date.now().toString(36);
+          }
+
+          // Dynamically add columns if they don't exist (filter out undefined/null values)
+          const dataKeys = Object.keys(finalData).filter(
+            (key) => finalData[key] !== undefined,
+          );
           for (const key of dataKeys) {
             await ensureColumnExists(model, key);
           }
 
-          const keys = Object.keys(data);
-          const values = Object.values(data).map(sanitizeValue);
+          // Filter out undefined values for SQL insertion
+          const validEntries = Object.entries(finalData).filter(
+            ([_, value]) => value !== undefined,
+          );
+          const keys = validEntries.map(([key]) => key);
+          const values = validEntries.map(([_, value]) => sanitizeValue(value));
           const placeholders = keys.map(() => "?").join(", ");
 
           const sql =
@@ -259,10 +482,7 @@ export const tursoAdapter = (
               ? `INSERT INTO ${model} (${keys.join(", ")}) VALUES (${placeholders}) RETURNING *`
               : `INSERT INTO ${model} DEFAULT VALUES RETURNING *`;
 
-          const result = await client.execute({
-            sql,
-            args: values,
-          });
+          const result = await executeQuery(sql, values);
 
           if (!result.rows?.length) {
             throw new Error("Failed to create record");
@@ -272,18 +492,14 @@ export const tursoAdapter = (
           const row = result.rows[0] as any;
           const deserializedRow: any = {};
           for (const [key, value] of Object.entries(row)) {
-            deserializedRow[key] = deserializeValue(value, data[key]);
+            deserializedRow[key] = deserializeValue(value, key);
           }
-          
+
           return deserializedRow;
         },
 
         update: async ({ model, where, update }) => {
-          if (
-            debugLog &&
-            typeof debugLog === "object" &&
-            "update" in debugLog
-          ) {
+          if ((debugLog as any)?.update) {
             console.log(`[Turso Adapter] Updating in ${model}:`, {
               where,
               update,
@@ -291,7 +507,7 @@ export const tursoAdapter = (
           }
 
           // Ensure table exists before updating
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
           // Ensure columns exist for update data
           const updateKeys = Object.keys(update);
@@ -300,34 +516,30 @@ export const tursoAdapter = (
           }
 
           const updateData = update as any;
-          const whereData = where as any;
           const updateValues = Object.values(updateData).map(sanitizeValue);
-          const whereKeys = Object.keys(whereData);
-          const whereValues = Object.values(whereData).map(sanitizeValue);
 
+          // Process where clause
+          const { whereClause, whereValues } = processWhereClause(where);
           const updateClause = updateKeys.map((key) => `${key} = ?`).join(", ");
-          const whereClause = whereKeys
-            .map((key) => `${key} = ?`)
-            .join(" AND ");
 
           const sql = `UPDATE ${model} SET ${updateClause} WHERE ${whereClause} RETURNING *`;
 
-          const result = await client.execute({
-            sql,
-            args: [...updateValues, ...whereValues],
-          });
+          const result = await executeQuery(sql, [
+            ...updateValues,
+            ...whereValues,
+          ]);
 
           if (!result.rows?.length) {
-            throw new Error("Failed to update record or record not found");
+            return null; // Return null instead of throwing for non-existent records
           }
 
-          // Deserialize the returned data  
+          // Deserialize the returned data
           const row = result.rows[0] as any;
           const deserializedRow: any = {};
           for (const [key, value] of Object.entries(row)) {
-            deserializedRow[key] = deserializeValue(value, updateData[key] || whereData[key]);
+            deserializedRow[key] = deserializeValue(value, key);
           }
-          
+
           return deserializedRow;
         },
 
@@ -340,24 +552,19 @@ export const tursoAdapter = (
           }
 
           // Ensure table exists before updating
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
           const updateKeys = Object.keys(update);
           const updateValues = Object.values(update).map(sanitizeValue);
-          const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
+          const { whereClause, whereValues } = processWhereClause(where);
 
           const updateClause = updateKeys.map((key) => `${key} = ?`).join(", ");
-          const whereClause = whereKeys
-            .map((key) => `${key} = ?`)
-            .join(" AND ");
-
           const sql = `UPDATE ${model} SET ${updateClause} WHERE ${whereClause}`;
 
-          const result = await client.execute({
-            sql,
-            args: [...updateValues, ...whereValues],
-          });
+          const result = await executeQuery(sql, [
+            ...updateValues,
+            ...whereValues,
+          ]);
 
           return Number(result.rowsAffected);
         },
@@ -368,20 +575,12 @@ export const tursoAdapter = (
           }
 
           // Ensure table exists before deleting
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
-          const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
-          const whereClause = whereKeys
-            .map((key) => `${key} = ?`)
-            .join(" AND ");
-
+          const { whereClause, whereValues } = processWhereClause(where);
           const sql = `DELETE FROM ${model} WHERE ${whereClause}`;
 
-          await client.execute({
-            sql,
-            args: whereValues,
-          });
+          await executeQuery(sql, whereValues);
         },
 
         deleteMany: async ({ model, where }) => {
@@ -390,20 +589,12 @@ export const tursoAdapter = (
           }
 
           // Ensure table exists before deleting
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
-          const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
-          const whereClause = whereKeys
-            .map((key) => `${key} = ?`)
-            .join(" AND ");
-
+          const { whereClause, whereValues } = processWhereClause(where);
           const sql = `DELETE FROM ${model} WHERE ${whereClause}`;
 
-          const result = await client.execute({
-            sql,
-            args: whereValues,
-          });
+          const result = await executeQuery(sql, whereValues);
 
           return Number(result.rowsAffected);
         },
@@ -417,22 +608,15 @@ export const tursoAdapter = (
           }
 
           // Ensure table exists before finding
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
-          const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
-          const whereClause = whereKeys
-            .map((key) => `${key} = ?`)
-            .join(" AND ");
-
+          // Process where clause
+          const { whereClause, whereValues } = processWhereClause(where);
           const selectClause =
             select && select.length > 0 ? select.join(", ") : "*";
           const sql = `SELECT ${selectClause} FROM ${model} WHERE ${whereClause} LIMIT 1`;
 
-          const result = await client.execute({
-            sql,
-            args: whereValues,
-          });
+          const result = await executeQuery(sql, whereValues);
 
           if (!result.rows || result.rows.length === 0) {
             return null;
@@ -442,9 +626,9 @@ export const tursoAdapter = (
           const row = result.rows[0] as any;
           const deserializedRow: any = {};
           for (const [key, value] of Object.entries(row)) {
-            deserializedRow[key] = deserializeValue(value);
+            deserializedRow[key] = deserializeValue(value, key);
           }
-          
+
           return deserializedRow;
         },
 
@@ -459,27 +643,38 @@ export const tursoAdapter = (
           }
 
           // Ensure table exists before finding
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
           let sql = `SELECT * FROM ${model}`;
           const args: any[] = [];
 
-          if (where && Object.keys(where).length > 0) {
-            const whereKeys = Object.keys(where);
-            const whereValues = Object.values(where).map(sanitizeValue);
-            const whereClause = whereKeys
-              .map((key) => `${key} = ?`)
-              .join(" AND ");
-            sql += ` WHERE ${whereClause}`;
-            args.push(...whereValues);
+          if (where && Array.isArray(where) && where.length > 0) {
+            const { whereClause, whereValues } = processWhereClause(where);
+            if (whereClause !== "1=1") {
+              sql += ` WHERE ${whereClause}`;
+              args.push(...whereValues);
+            }
           }
 
-          if (sortBy && Object.keys(sortBy).length > 0) {
-            const orderClauses = Object.entries(sortBy).map(
-              ([key, direction]) =>
-                `${key} ${direction === "desc" ? "DESC" : "ASC"}`,
-            );
-            sql += ` ORDER BY ${orderClauses.join(", ")}`;
+          if (sortBy) {
+            if (
+              typeof sortBy === "object" &&
+              sortBy.field &&
+              sortBy.direction
+            ) {
+              // Better Auth format: { field: "name", direction: "asc" }
+              sql += ` ORDER BY ${sortBy.field} ${sortBy.direction === "desc" ? "DESC" : "ASC"}`;
+            } else if (
+              typeof sortBy === "object" &&
+              Object.keys(sortBy).length > 0
+            ) {
+              // Object format: { name: "asc", email: "desc" }
+              const orderClauses = Object.entries(sortBy).map(
+                ([key, direction]) =>
+                  `${key} ${direction === "desc" ? "DESC" : "ASC"}`,
+              );
+              sql += ` ORDER BY ${orderClauses.join(", ")}`;
+            }
           }
 
           if (limit) {
@@ -492,16 +687,13 @@ export const tursoAdapter = (
             args.push(offset);
           }
 
-          const result = await client.execute({
-            sql,
-            args,
-          });
+          const result = await executeQuery(sql, args);
 
           // Deserialize all returned rows
           return (result.rows || []).map((row: any) => {
             const deserializedRow: any = {};
             for (const [key, value] of Object.entries(row)) {
-              deserializedRow[key] = deserializeValue(value);
+              deserializedRow[key] = deserializeValue(value, key);
             }
             return deserializedRow;
           });
@@ -513,25 +705,20 @@ export const tursoAdapter = (
           }
 
           // Ensure table exists before counting
-          await ensureTableExists(model);
+          await ensureTableExists(model, options);
 
           let sql = `SELECT COUNT(*) as count FROM ${model}`;
           const args: any[] = [];
 
-          if (where && Object.keys(where).length > 0) {
-            const whereKeys = Object.keys(where);
-            const whereValues = Object.values(where).map(sanitizeValue);
-            const whereClause = whereKeys
-              .map((key) => `${key} = ?`)
-              .join(" AND ");
-            sql += ` WHERE ${whereClause}`;
-            args.push(...whereValues);
+          if (where && Array.isArray(where) && where.length > 0) {
+            const { whereClause, whereValues } = processWhereClause(where);
+            if (whereClause !== "1=1") {
+              sql += ` WHERE ${whereClause}`;
+              args.push(...whereValues);
+            }
           }
 
-          const result = await client.execute({
-            sql,
-            args,
-          });
+          const result = await executeQuery(sql, args);
 
           if (!result.rows || result.rows.length === 0) {
             return 0;
