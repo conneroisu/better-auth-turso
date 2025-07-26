@@ -85,7 +85,7 @@ jobs:
 
       - name: Install example dependencies
         run: |
-          cd examples/nextjs
+          cd examples/nextjs-app
           bun install --frozen-lockfile
 
       - name: Build adapter
@@ -93,12 +93,12 @@ jobs:
 
       - name: Run example tests
         run: |
-          cd examples/nextjs
+          cd examples/nextjs-app
           bun test
 
       - name: Build Next.js example
         run: |
-          cd examples/nextjs
+          cd examples/nextjs-app
           bun run build
 
   docker-build:
@@ -152,16 +152,16 @@ jobs:
         run: bun run build
 
       - name: Create test database
-        run: touch examples/nextjs/test.db
+        run: touch examples/nextjs-app/test.db
 
       - name: Run integration tests
         run: |
-          cd examples/nextjs
+          cd examples/nextjs-app
           TURSO_DATABASE_URL="file:./test.db" bun test simple-auth.test.ts
 
       - name: Start Next.js app (health check)
         run: |
-          cd examples/nextjs
+          cd examples/nextjs-app
           TURSO_DATABASE_URL="file:./test.db" timeout 30s bun dev &
           sleep 10
           curl -f http://localhost:3000 || exit 1
