@@ -30,7 +30,9 @@ describe("Turso Adapter Configuration Tests", () => {
   test("should throw error when neither client nor config is provided", () => {
     expect(() => {
       tursoAdapter({});
-    }).toThrow("Either 'client' or 'config' must be provided to the Turso adapter");
+    }).toThrow(
+      "Either 'client' or 'config' must be provided to the Turso adapter",
+    );
   });
 
   test("should accept client configuration", () => {
@@ -42,33 +44,33 @@ describe("Turso Adapter Configuration Tests", () => {
 
   test("should accept turso configuration", () => {
     expect(() => {
-      tursoAdapter({ 
-        config: { url: ":memory:" } 
+      tursoAdapter({
+        config: { url: ":memory:" },
       });
     }).not.toThrow();
   });
 
   test("should respect usePlural option", () => {
     const client = createClient({ url: ":memory:" });
-    const adapter = tursoAdapter({ 
-      client, 
-      usePlural: true 
+    const adapter = tursoAdapter({
+      client,
+      usePlural: true,
     });
-    
+
     // The adapter config should reflect the usePlural setting
     expect(adapter).toBeDefined();
   });
 
   test("should respect debugLogs option", () => {
     const client = createClient({ url: ":memory:" });
-    const adapter = tursoAdapter({ 
+    const adapter = tursoAdapter({
       client,
       debugLogs: {
         create: true,
         update: true,
-      }
+      },
     });
-    
+
     expect(adapter).toBeDefined();
   });
 });

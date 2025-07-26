@@ -2,9 +2,9 @@
   "name": "better-auth-turso",
   "version": "1.0.0",
   "description": "Turso database adapter for Better Auth",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "tsc",

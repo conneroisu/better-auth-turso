@@ -1,291 +1,358 @@
-# Contributing to Better Auth Turso Adapter
+# Contributing to Better Auth Turso
 
-Thank you for your interest in contributing to the Better Auth Turso Adapter! This document provides guidelines for contributing to this project.
+Thank you for your interest in contributing to Better Auth Turso! This document provides guidelines and information for contributors.
+
+## Table of Contents
+
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Setup](#development-setup)
+- [Making Changes](#making-changes)
+- [Testing](#testing)
+- [Submitting Changes](#submitting-changes)
+- [Code Style](#code-style)
+- [Release Process](#release-process)
 
 ## Code of Conduct
 
-By participating in this project, you are expected to uphold our Code of Conduct (see CODE_OF_CONDUCT.md).
+This project adheres to a code of conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
+
+### Our Standards
+
+- Be respectful and inclusive
+- Focus on constructive feedback
+- Accept responsibility for mistakes
+- Show empathy towards other community members
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18.x or higher
-- npm or yarn package manager
-- Git
+- [Bun](https://bun.sh) (latest version)
+- [Docker](https://docker.com) (optional, for containerized development)
+- [Git](https://git-scm.com)
+- [Node.js](https://nodejs.org) 18+ (if not using Bun)
 
-### Development Setup
+### Fork and Clone
 
-1. **Fork and Clone**
+1. Fork the repository on GitHub
+2. Clone your fork locally:
    ```bash
-   git clone https://github.com/your-username/better-auth-turso.git
+   git clone https://github.com/YOUR_USERNAME/better-auth-turso.git
    cd better-auth-turso
    ```
 
-2. **Install Dependencies**
+## Development Setup
+
+### Local Development
+
+1. Install dependencies:
    ```bash
-   npm install
+   bun install
    ```
 
-3. **Run Tests**
+2. Install example dependencies:
    ```bash
-   npm test
+   cd examples/nextjs
+   bun install
+   cd ../..
    ```
 
-4. **Build the Project**
+3. Build the adapter:
    ```bash
-   npm run build
+   bun run build
    ```
 
-### Project Structure
+4. Start development:
+   ```bash
+   # Watch mode for adapter
+   bun run dev
 
-```
-better-auth-turso/
-├── src/                    # Source code
-│   ├── index.ts           # Main adapter implementation
-│   ├── *.test.ts          # Test files
-│   └── test-setup.ts      # Test configuration
-├── examples/              # Example applications
-│   └── nextjs/           # Next.js example
-├── dist/                 # Built output (generated)
-├── docs/                 # Documentation
-└── .github/              # GitHub workflows
-```
+   # Run Next.js example
+   cd examples/nextjs
+   bun dev
+   ```
 
-## Development Workflow
+### Docker Development
 
-### 1. Create a Branch
-
-Create a new branch for your feature or bug fix:
+Use the provided Docker setup for a consistent development environment:
 
 ```bash
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/your-bug-fix
+# Start development environment
+./docker-dev.sh dev
+
+# Or use docker-compose directly
+docker-compose --profile dev up --build
 ```
 
-### 2. Make Changes
+## Making Changes
 
-- Follow the existing code style and patterns
-- Write tests for new functionality
-- Update documentation as needed
-- Ensure TypeScript types are properly defined
+### Branch Naming
 
-### 3. Test Your Changes
+Use descriptive branch names:
+- `feature/add-pagination-support`
+- `fix/session-timeout-issue`
+- `docs/update-readme`
+- `refactor/simplify-error-handling`
 
-Run the full test suite:
+### Commit Messages
+
+Follow conventional commit format:
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+Examples:
+```
+feat(adapter): add support for custom field mapping
+fix(session): resolve session expiry calculation bug
+docs(readme): update installation instructions
+```
+
+### Making Your Changes
+
+1. Create a new branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes following the [code style guidelines](#code-style)
+
+3. Add or update tests as needed
+
+4. Update documentation if your changes affect the public API
+
+5. Ensure all tests pass:
+   ```bash
+   bun run test
+   ```
+
+6. Check code quality:
+   ```bash
+   bun run lint
+   bun run format:check
+   bun run typecheck
+   ```
+
+## Testing
+
+We maintain high test coverage. Please include tests for new features and bug fixes.
+
+### Running Tests
 
 ```bash
 # Run all tests
-npm test
+bun run test
 
 # Run tests in watch mode
-npm run test:watch
+bun run test:watch
 
 # Run tests with coverage
-npm run test:coverage
+bun run test:coverage
 
-# Run type checking
-npm run typecheck
-
-# Run linting
-npm run lint
+# Run specific test file
+bun test __tests__/turso-adapter.test.ts
 ```
 
-### 4. Test with Examples
+### Test Structure
 
-Test your changes with the Next.js example:
+- **Unit tests**: Test individual functions and classes
+- **Integration tests**: Test adapter with Better Auth
+- **Example tests**: Test the Next.js example application
 
-```bash
-cd examples/nextjs
-npm install
-npm run build
+### Writing Tests
+
+1. Place tests in the `__tests__` directory
+2. Use descriptive test names
+3. Follow the Arrange-Act-Assert pattern
+4. Mock external dependencies
+5. Test both happy paths and error cases
+
+Example test structure:
+```typescript
+import { expect, test, describe } from "vitest";
+import { tursoAdapter } from "../src/index";
+
+describe("TursoAdapter", () => {
+  describe("Configuration", () => {
+    test("should create adapter with client", () => {
+      // Arrange
+      const client = createTestClient();
+      
+      // Act
+      const adapter = tursoAdapter({ client });
+      
+      // Assert
+      expect(adapter.config.adapterId).toBe("turso-adapter");
+    });
+  });
+});
 ```
 
-### 5. Commit Your Changes
+## Submitting Changes
 
-We use conventional commits for clear commit messages:
+### Pull Request Process
 
-```bash
-# Feature
-git commit -m "feat: add support for custom table naming"
+1. Push your changes to your fork:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-# Bug fix  
-git commit -m "fix: resolve connection timeout issue"
+2. Create a pull request on GitHub with:
+   - Clear title and description
+   - Reference to any related issues
+   - Screenshots for UI changes
+   - Test coverage information
 
-# Documentation
-git commit -m "docs: update README with new configuration options"
+3. Ensure all CI checks pass
 
-# Test
-git commit -m "test: add integration tests for schema generation"
-```
+4. Request review from maintainers
 
-### 6. Push and Create PR
+### Pull Request Guidelines
 
-```bash
-git push origin your-branch-name
-```
+- Keep PRs focused and atomic
+- Include tests for new functionality
+- Update documentation as needed
+- Follow the existing code style
+- Write clear commit messages
 
-Then create a Pull Request through GitHub.
+### Review Process
 
-## Coding Standards
+1. Automated checks must pass (CI/CD)
+2. Code review by at least one maintainer
+3. All feedback must be addressed
+4. Final approval from a maintainer
+5. Merge (squash and merge preferred)
 
-### TypeScript
+## Code Style
 
-- Use strict TypeScript settings
-- Provide proper type definitions for all public APIs
-- Avoid `any` types when possible
+We use a consistent code style across the project.
+
+### TypeScript Guidelines
+
+- Use TypeScript strict mode
+- Prefer explicit types over `any`
 - Use meaningful variable and function names
+- Follow the existing naming conventions
 
-### Code Style
+### Formatting
 
-- Use 2 spaces for indentation
-- Use semicolons
-- Use double quotes for strings
-- Follow existing patterns in the codebase
+We use Prettier for code formatting:
+```bash
+# Format code
+bun run format
 
-### Documentation
+# Check formatting
+bun run format:check
+```
 
-- Document all public APIs with JSDoc comments
-- Keep README files up to date
-- Add inline comments for complex logic
-- Update examples when adding new features
+### Linting
 
-## Testing Guidelines
+We use ESLint for code quality:
+```bash
+# Run linter
+bun run lint
 
-### Unit Tests
+# Fix lint issues
+bun run lint:fix
+```
 
-- Write unit tests for all new functionality
-- Aim for high test coverage (>90%)
-- Use descriptive test names
-- Group related tests with `describe` blocks
+### Style Principles
 
+Following "Your Style" philosophy:
+
+1. **Safety**: Write code that works in all situations
+   - Use explicit types and bounds checking
+   - Handle errors gracefully
+   - Validate inputs and outputs
+
+2. **Performance**: Optimize for speed and efficiency
+   - Design for performance early
+   - Use appropriate data structures
+   - Profile and optimize bottlenecks
+
+3. **Developer Experience**: Write maintainable code
+   - Use clear, descriptive names
+   - Keep functions focused and small
+   - Document complex logic
+
+### Code Examples
+
+**Good:**
 ```typescript
-describe("TursoAdapter Configuration", () => {
-  test("should throw error when neither client nor config is provided", () => {
-    expect(() => tursoAdapter({})).toThrow();
-  });
+export const createUserSession = async (
+  client: Client,
+  userId: string,
+  expiresInMs: number
+): Promise<Session> => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
   
-  test("should accept valid client configuration", () => {
-    const client = createClient({ url: ":memory:" });
-    expect(() => tursoAdapter({ client })).not.toThrow();
-  });
-});
-```
-
-### Integration Tests
-
-- Test real database operations
-- Test compatibility with Better Auth
-- Use in-memory databases for testing
-- Clean up after tests
-
-### Testing with Better Auth
-
-When adding new features, ensure they work with Better Auth:
-
-```typescript
-import { runAdapterTest } from "better-auth/adapters/test";
-
-describe("Better Auth Compatibility", () => {
-  await runAdapterTest({
-    getAdapter: async () => tursoAdapter({ /* config */ }),
-  });
-});
-```
-
-## Documentation
-
-### README Updates
-
-When adding features, update:
-- Installation instructions
-- Configuration options
-- Usage examples
-- API documentation
-
-### JSDoc Comments
-
-Use JSDoc for public APIs:
-
-```typescript
-/**
- * Creates a Turso database adapter for Better Auth
- * @param config - Configuration options for the adapter
- * @returns Better Auth compatible database adapter
- */
-export const tursoAdapter = (config: TursoAdapterConfig) => {
-  // implementation
+  if (expiresInMs <= 0) {
+    throw new Error("Expiration must be positive");
+  }
+  
+  const expiresAt = new Date(Date.now() + expiresInMs);
+  
+  // Rest of implementation...
 };
 ```
 
-## Submitting Pull Requests
-
-### PR Guidelines
-
-1. **Clear Title**: Use descriptive titles that explain what the PR does
-2. **Description**: Explain what changes were made and why
-3. **Testing**: Describe how you tested the changes
-4. **Breaking Changes**: Clearly mark any breaking changes
-5. **Documentation**: Update docs if needed
-
-### PR Template
-
-```markdown
-## Description
-Brief description of what this PR does.
-
-## Type of Change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## Testing
-- [ ] Tests pass locally
-- [ ] Added tests for new functionality
-- [ ] Tested with Next.js example
-
-## Checklist
-- [ ] Code follows the style guidelines
-- [ ] Self-review of code completed
-- [ ] Documentation updated
-- [ ] No new warnings introduced
+**Avoid:**
+```typescript
+export const createSess = async (c: any, u: string, exp: number) => {
+  // Unclear names, no validation
+  const e = new Date(Date.now() + exp);
+  // ...
+};
 ```
 
 ## Release Process
 
 Releases are automated through GitHub Actions:
 
-1. **Version Bump**: Update version in `package.json`
-2. **Changelog**: Update `CHANGELOG.md` with changes
-3. **Tag**: Create and push a version tag
-4. **Automated**: CI will run tests and publish to npm
+1. Version bump:
+   ```bash
+   npm version patch|minor|major
+   ```
 
-## Getting Help
+2. Push tags:
+   ```bash
+   git push --tags
+   ```
 
-### Community
+3. GitHub Actions will:
+   - Run all tests
+   - Build the package
+   - Publish to NPM
+   - Create GitHub release
 
-- **GitHub Issues**: For bug reports and feature requests
-- **GitHub Discussions**: For questions and community discussion
-- **Discord**: Join the Better Auth community
+## Questions and Support
 
-### Maintainers
-
-Current maintainers:
-- [@username](https://github.com/username) - Primary maintainer
+- **Documentation**: Check the README and inline documentation
+- **Issues**: Create a GitHub issue for bugs or feature requests
+- **Discussions**: Use GitHub Discussions for questions and ideas
+- **Security**: Email security@yourproject.com for security issues
 
 ## Recognition
 
-Contributors will be recognized in:
-- README.md contributors section
+Contributors are recognized in:
+- GitHub contributor graphs
 - Release notes
-- GitHub contributors page
+- README acknowledgments
 
-## License
-
-By contributing, you agree that your contributions will be licensed under the same license as the project (MIT License).
-
----
-
-Thank you for contributing to Better Auth Turso Adapter! 🎉
+Thank you for contributing to Better Auth Turso! 🎉

@@ -2,22 +2,22 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: "happy-dom",
+    name: "property",
+    environment: "node",
     globals: true,
-    timeout: 30000,
+    timeout: 120000, // Property tests can take longer
+    include: ["src/**/*.property.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
       exclude: [
-        "node_modules/",
-        "dist/",
-        "examples/",
-        "**/*.test.ts",
+        "dist/**",
+        "node_modules/**",
+        "**/*.d.ts",
         "**/*.config.ts",
-        "**/*.config.js",
+        "**/*.test.ts",
       ],
     },
-    setupFiles: ["./src/test-setup.ts"],
   },
   esbuild: {
     target: "node18",
