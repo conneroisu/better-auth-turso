@@ -117,11 +117,10 @@ export const tursoAdapter = (
           updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
         )`;
       } else {
-        // Generic table for unknown models
+        // Generic table for any other models (including test models)
+        // Start with basic id column and let dynamic column addition handle the rest
         createSQL = `CREATE TABLE IF NOT EXISTS ${model} (
-          id TEXT PRIMARY KEY,
-          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+          id TEXT PRIMARY KEY
         )`;
       }
 
@@ -150,6 +149,74 @@ export const tursoAdapter = (
     } catch {
       // Column already exists or other error, continue
     }
+  };
+
+  // Helper function to sanitize values for SQLite binding
+  const sanitizeValue = (value: any): any => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === "string" || typeof value === "number" || typeof value === "bigint") {
+      return value;
+    }
+    if (typeof value === "boolean") {
+      return value ? 1 : 0;
+    }
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    if (Buffer.isBuffer(value)) {
+      return value;
+    }
+    // Convert objects and arrays to JSON strings
+    return JSON.stringify(value);
+  };
+
+  // Helper function to deserialize values from SQLite
+  const deserializeValue = (value: any, originalValue?: any): any => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    
+    // If we have the original value type, try to convert back
+    if (originalValue !== undefined) {
+      if (typeof originalValue === "boolean") {
+        return value === 1 || value === true || value === "true";
+      }
+      if (originalValue instanceof Date) {
+        return new Date(value);
+      }
+      if (typeof originalValue === "object" && originalValue !== null) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+    }
+    
+    // Try intelligent conversion based on value
+    if (typeof value === "string") {
+      // Try to parse as date
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+      
+      // Try to parse as JSON
+      if ((value.startsWith('{') && value.endsWith('}')) || 
+          (value.startsWith('[') && value.endsWith(']'))) {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+    }
+    
+    return value;
   };
 
   return createAdapter({
@@ -184,7 +251,7 @@ export const tursoAdapter = (
           }
 
           const keys = Object.keys(data);
-          const values = Object.values(data);
+          const values = Object.values(data).map(sanitizeValue);
           const placeholders = keys.map(() => "?").join(", ");
 
           const sql =
@@ -201,7 +268,14 @@ export const tursoAdapter = (
             throw new Error("Failed to create record");
           }
 
-          return result.rows[0] as any;
+          // Deserialize the returned data
+          const row = result.rows[0] as any;
+          const deserializedRow: any = {};
+          for (const [key, value] of Object.entries(row)) {
+            deserializedRow[key] = deserializeValue(value, data[key]);
+          }
+          
+          return deserializedRow;
         },
 
         update: async ({ model, where, update }) => {
@@ -227,9 +301,9 @@ export const tursoAdapter = (
 
           const updateData = update as any;
           const whereData = where as any;
-          const updateValues = Object.values(updateData);
+          const updateValues = Object.values(updateData).map(sanitizeValue);
           const whereKeys = Object.keys(whereData);
-          const whereValues = Object.values(whereData);
+          const whereValues = Object.values(whereData).map(sanitizeValue);
 
           const updateClause = updateKeys.map((key) => `${key} = ?`).join(", ");
           const whereClause = whereKeys
@@ -247,7 +321,14 @@ export const tursoAdapter = (
             throw new Error("Failed to update record or record not found");
           }
 
-          return result.rows[0] as Record<string, unknown>;
+          // Deserialize the returned data  
+          const row = result.rows[0] as any;
+          const deserializedRow: any = {};
+          for (const [key, value] of Object.entries(row)) {
+            deserializedRow[key] = deserializeValue(value, updateData[key] || whereData[key]);
+          }
+          
+          return deserializedRow;
         },
 
         updateMany: async ({ model, where, update }) => {
@@ -262,9 +343,9 @@ export const tursoAdapter = (
           await ensureTableExists(model);
 
           const updateKeys = Object.keys(update);
-          const updateValues = Object.values(update);
+          const updateValues = Object.values(update).map(sanitizeValue);
           const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>);
+          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
 
           const updateClause = updateKeys.map((key) => `${key} = ?`).join(", ");
           const whereClause = whereKeys
@@ -275,7 +356,7 @@ export const tursoAdapter = (
 
           const result = await client.execute({
             sql,
-            args: [...updateValues, ...whereValues] as any[],
+            args: [...updateValues, ...whereValues],
           });
 
           return Number(result.rowsAffected);
@@ -290,7 +371,7 @@ export const tursoAdapter = (
           await ensureTableExists(model);
 
           const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>);
+          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
           const whereClause = whereKeys
             .map((key) => `${key} = ?`)
             .join(" AND ");
@@ -312,7 +393,7 @@ export const tursoAdapter = (
           await ensureTableExists(model);
 
           const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>);
+          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
           const whereClause = whereKeys
             .map((key) => `${key} = ?`)
             .join(" AND ");
@@ -339,7 +420,7 @@ export const tursoAdapter = (
           await ensureTableExists(model);
 
           const whereKeys = Object.keys(where as Record<string, any>);
-          const whereValues = Object.values(where as Record<string, any>);
+          const whereValues = Object.values(where as Record<string, any>).map(sanitizeValue);
           const whereClause = whereKeys
             .map((key) => `${key} = ?`)
             .join(" AND ");
@@ -357,7 +438,14 @@ export const tursoAdapter = (
             return null;
           }
 
-          return result.rows[0] as any;
+          // Deserialize the returned data
+          const row = result.rows[0] as any;
+          const deserializedRow: any = {};
+          for (const [key, value] of Object.entries(row)) {
+            deserializedRow[key] = deserializeValue(value);
+          }
+          
+          return deserializedRow;
         },
 
         findMany: async ({ model, where, limit, sortBy, offset }) => {
@@ -378,7 +466,7 @@ export const tursoAdapter = (
 
           if (where && Object.keys(where).length > 0) {
             const whereKeys = Object.keys(where);
-            const whereValues = Object.values(where);
+            const whereValues = Object.values(where).map(sanitizeValue);
             const whereClause = whereKeys
               .map((key) => `${key} = ?`)
               .join(" AND ");
@@ -409,7 +497,14 @@ export const tursoAdapter = (
             args,
           });
 
-          return (result.rows || []) as any[];
+          // Deserialize all returned rows
+          return (result.rows || []).map((row: any) => {
+            const deserializedRow: any = {};
+            for (const [key, value] of Object.entries(row)) {
+              deserializedRow[key] = deserializeValue(value);
+            }
+            return deserializedRow;
+          });
         },
 
         count: async ({ model, where }) => {
@@ -425,7 +520,7 @@ export const tursoAdapter = (
 
           if (where && Object.keys(where).length > 0) {
             const whereKeys = Object.keys(where);
-            const whereValues = Object.values(where);
+            const whereValues = Object.values(where).map(sanitizeValue);
             const whereClause = whereKeys
               .map((key) => `${key} = ?`)
               .join(" AND ");

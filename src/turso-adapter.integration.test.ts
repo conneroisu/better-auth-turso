@@ -66,9 +66,11 @@ describe("TursoAdapter - Integration Tests", () => {
         debugLogs: true,
       });
 
-      adapterInstance = adapter({
-        debugLog: true,
-      });
+      // Call the adapter factory with empty options to get the raw adapter functions
+      const adapterResult = adapter({});
+      console.log("Adapter result structure:", Object.keys(adapterResult));
+      console.log("Adapter result:", adapterResult);
+      adapterInstance = adapterResult;
     });
 
     afterEach(async () => {
@@ -76,27 +78,16 @@ describe("TursoAdapter - Integration Tests", () => {
     });
 
     test("should perform complete CRUD cycle", async () => {
-      // Setup table first
-      await client.execute(`
-        CREATE TABLE IF NOT EXISTS test_users (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          email TEXT UNIQUE,
-          age INTEGER,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-
       const testUser = {
         id: "test-user-1",
         name: "John Doe",
         email: "john@example.com",
-        age: 30,
+        emailVerified: false,
       };
 
       // Create
       const created = await adapterInstance.create({
-        model: "test_users",
+        model: "user",
         data: testUser,
       });
 
@@ -105,27 +96,27 @@ describe("TursoAdapter - Integration Tests", () => {
 
       // Read (findOne)
       const found = await adapterInstance.findOne({
-        model: "test_users",
+        model: "user",  
         where: { id: testUser.id },
       });
 
       expect(found).toMatchObject(testUser);
 
       // Update
-      const updatedData = { name: "Jane Doe", age: 31 };
+      const updatedData = { name: "Jane Doe", emailVerified: true };
       const updated = await adapterInstance.update({
-        model: "test_users",
+        model: "user",
         where: { id: testUser.id },
         update: updatedData,
       });
 
       expect(updated.name).toBe("Jane Doe");
-      expect(updated.age).toBe(31);
+      expect(updated.emailVerified).toBe(true);
       expect(updated.email).toBe(testUser.email); // Should remain unchanged
 
       // Count
       const count = await adapterInstance.count({
-        model: "test_users",
+        model: "user",
         where: {},
       });
 
@@ -133,20 +124,20 @@ describe("TursoAdapter - Integration Tests", () => {
 
       // Delete
       await adapterInstance.delete({
-        model: "test_users",
+        model: "user",
         where: { id: testUser.id },
       });
 
       // Verify deletion
       const deletedUser = await adapterInstance.findOne({
-        model: "test_users",
+        model: "user",
         where: { id: testUser.id },
       });
 
       expect(deletedUser).toBeNull();
 
       const finalCount = await adapterInstance.count({
-        model: "test_users",
+        model: "user",
         where: {},
       });
 
