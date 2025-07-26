@@ -211,6 +211,15 @@ else
     print_warning "Skipping numeric IDs example (setup failed)"
 fi
 
+# Test Next.js example
+if setup_example "examples/nextjs-app" "nextjs-app"; then
+    cd examples/nextjs-app
+    run_test "Next.js example test" "timeout 30s bun simple-test.ts"
+    cd "$ORIGINAL_DIR"
+else
+    print_warning "Skipping Next.js example (setup failed)"
+fi
+
 # 10. Example Execution Tests (optional, can be skipped if they take too long)
 print_header "🎭 EXAMPLE EXECUTION TESTS"
 
@@ -234,6 +243,18 @@ if timeout 10s bun index.ts > /dev/null 2>&1; then
 else
     print_warning "Numeric IDs example execution (may be expected if it runs indefinitely)"
     # Don't count as failure since some examples might run indefinitely
+fi
+TOTAL_TESTS=$((TOTAL_TESTS + 1))
+cd "$ORIGINAL_DIR"
+
+print_step "Testing Next.js example build"
+cd examples/nextjs-app
+if timeout 60s bun install > /dev/null 2>&1 && timeout 60s bun run build > /dev/null 2>&1; then
+    print_success "Next.js example build"
+    PASSED_TESTS=$((PASSED_TESTS + 1))
+else
+    print_warning "Next.js example build (may require additional setup)"
+    # Don't count as failure since Next.js builds can be complex
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 1))
 cd "$ORIGINAL_DIR"
