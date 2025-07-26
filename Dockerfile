@@ -6,14 +6,14 @@ WORKDIR /app
 FROM base AS deps
 # Copy package files
 COPY package.json bun.lockb* ./
-COPY examples/nextjs/package.json ./examples/nextjs/
+COPY examples/nextjs-app/package.json ./examples/nextjs-app/
 RUN bun install --frozen-lockfile
 
 # Development stage
 FROM base AS dev
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/examples/nextjs/node_modules ./examples/nextjs/node_modules
+COPY --from=deps /app/examples/nextjs-app/node_modules ./examples/nextjs-app/node_modules
 COPY . .
 
 # Install development dependencies
@@ -29,14 +29,14 @@ CMD ["bun", "run", "dev"]
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/examples/nextjs/node_modules ./examples/nextjs/node_modules
+COPY --from=deps /app/examples/nextjs-app/node_modules ./examples/nextjs-app/node_modules
 COPY . .
 
 # Build the adapter
 RUN bun run build
 
 # Build the Next.js example
-WORKDIR /app/examples/nextjs
+WORKDIR /app/examples/nextjs-app
 RUN bun run build
 
 # Production stage for the example app
@@ -51,9 +51,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy built application
-COPY --from=builder /app/examples/nextjs/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/examples/nextjs/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/examples/nextjs/.next/static ./.next/static
+COPY --from=builder /app/examples/nextjs-app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/examples/nextjs-app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/examples/nextjs-app/.next/static ./.next/static
 
 # Copy the built adapter
 COPY --from=builder /app/dist ./node_modules/better-auth-turso/dist
