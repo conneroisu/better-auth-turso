@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Better Auth + Turso Example",
-  description: "Next.js application demonstrating Better Auth with Turso database adapter",
+  description:
+    "Next.js application demonstrating Better Auth with Turso database adapter",
 };
 
 export default function RootLayout({

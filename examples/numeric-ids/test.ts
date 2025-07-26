@@ -1,12 +1,12 @@
 import { betterAuth } from "better-auth";
-import { createClient } from "@libsql/client";
+import Database from "@tursodatabase/turso";
 import { tursoAdapter } from "../../src/index.js";
 
 console.log("🧪 Testing Numeric IDs Example...");
 
 async function testNumericIdExample() {
   try {
-    const client = createClient({
+    const client = new Database({
       url: ":memory:",
     });
 
@@ -32,7 +32,7 @@ async function testNumericIdExample() {
       client,
       debugLogs: false,
     });
-    
+
     const db = testAdapter({
       advanced: {
         database: {
@@ -40,9 +40,9 @@ async function testNumericIdExample() {
         },
       },
     });
-    
+
     const users = [];
-    
+
     for (let i = 1; i <= 3; i++) {
       const user = await db.create({
         model: "user",
@@ -54,7 +54,7 @@ async function testNumericIdExample() {
       });
 
       users.push(user);
-      
+
       // Verify ID is a string representation of a number
       const numericId = parseInt(user.id);
       if (isNaN(numericId) || numericId !== i) {
@@ -72,7 +72,9 @@ async function testNumericIdExample() {
 
     const idColumn = tableInfo.rows?.find((row: any) => row.name === "id");
     if (!idColumn || idColumn.type !== "INTEGER" || idColumn.pk !== 1) {
-      throw new Error("ID column not properly configured as INTEGER PRIMARY KEY");
+      throw new Error(
+        "ID column not properly configured as INTEGER PRIMARY KEY",
+      );
     }
 
     console.log("✅ Database schema test passed");
@@ -90,7 +92,9 @@ async function testNumericIdExample() {
     for (let i = 0; i < 3; i++) {
       const row = allUsers.rows[i] as any;
       if (row.id !== i + 1) {
-        throw new Error(`Expected user ${i + 1} to have ID ${i + 1}, got ${row.id}`);
+        throw new Error(
+          `Expected user ${i + 1} to have ID ${i + 1}, got ${row.id}`,
+        );
       }
     }
 
@@ -98,13 +102,12 @@ async function testNumericIdExample() {
 
     console.log("\n🎉 All numeric IDs tests passed!");
     return true;
-    
   } catch (error) {
     console.error("❌ Numeric IDs test failed:", error);
     return false;
   }
 }
 
-testNumericIdExample().then(success => {
+testNumericIdExample().then((success) => {
   process.exit(success ? 0 : 1);
 });

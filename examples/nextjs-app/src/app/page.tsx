@@ -48,7 +48,7 @@ export default function HomePage() {
               >
                 Go to Dashboard
               </Link>
-              
+
               <button
                 onClick={() => signOut()}
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
@@ -73,7 +73,7 @@ export default function HomePage() {
               >
                 Sign In
               </Link>
-              
+
               <Link
                 href="/signup"
                 className="block w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md text-center transition-colors"
@@ -88,20 +88,36 @@ export default function HomePage() {
           <h3 className="text-lg font-semibold mb-4">Features Demonstrated</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
-              <div className="font-medium text-blue-800 dark:text-blue-300">Authentication</div>
-              <div className="text-blue-600 dark:text-blue-400">Email & Password</div>
+              <div className="font-medium text-blue-800 dark:text-blue-300">
+                Authentication
+              </div>
+              <div className="text-blue-600 dark:text-blue-400">
+                Email & Password
+              </div>
             </div>
             <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded">
-              <div className="font-medium text-purple-800 dark:text-purple-300">Database</div>
-              <div className="text-purple-600 dark:text-purple-400">Turso Adapter</div>
+              <div className="font-medium text-purple-800 dark:text-purple-300">
+                Database
+              </div>
+              <div className="text-purple-600 dark:text-purple-400">
+                Turso Adapter
+              </div>
             </div>
             <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded">
-              <div className="font-medium text-green-800 dark:text-green-300">Session</div>
-              <div className="text-green-600 dark:text-green-400">Management</div>
+              <div className="font-medium text-green-800 dark:text-green-300">
+                Session
+              </div>
+              <div className="text-green-600 dark:text-green-400">
+                Management
+              </div>
             </div>
             <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded">
-              <div className="font-medium text-orange-800 dark:text-orange-300">UI</div>
-              <div className="text-orange-600 dark:text-orange-400">React Hooks</div>
+              <div className="font-medium text-orange-800 dark:text-orange-300">
+                UI
+              </div>
+              <div className="text-orange-600 dark:text-orange-400">
+                React Hooks
+              </div>
             </div>
           </div>
         </div>

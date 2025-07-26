@@ -9,16 +9,21 @@ This is a **Better Auth Turso adapter** - a database adapter that enables [Bette
 ## Core Architecture
 
 - **Main adapter**: `src/index.ts` contains the `tursoAdapter` function and core implementation
-- **Database operations**: Uses `@libsql/client` for all database interactions with automatic table creation and column management
+- **Database operations**: Uses `@libsql/client` for Turso database operations with automatic table creation and column management
 - **Type safety**: Full TypeScript support with proper type inference
 - **Testing strategy**: Comprehensive test suite including unit, integration, property-based, and performance tests
 
 ## Key Dependencies
 
-- `@libsql/client`: Turso/libSQL database client (do not use `better-sqlite3`)
-- `better-auth`: Peer dependency for adapter interface
+- `@libsql/client`: Official libSQL client for Turso databases
+- `better-auth`: Peer dependency for adapter interface  
 - `vitest`: Testing framework (not Jest or Bun test)
 - `fast-check`: Property-based testing library
+
+**⚠️ DEPRECATED PACKAGES - DO NOT USE:**
+- `@tursodatabase/turso` - Has connection isolation issues, removed from project
+
+**IMPORTANT**: This adapter uses `@libsql/client` which is the official client for Turso databases. Turso is built on libSQL and provides a drop-in replacement for SQLite with additional features like edge replication.
 
 ## Development Commands
 

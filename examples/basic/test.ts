@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { createClient } from "@libsql/client";
+import Database from "@tursodatabase/turso";
 import { tursoAdapter } from "../../src/index.js";
 
 console.log("🧪 Testing Better Auth Turso Example...");
@@ -7,7 +7,7 @@ console.log("🧪 Testing Better Auth Turso Example...");
 async function testExample() {
   try {
     // Create client
-    const client = createClient({
+    const client = new Database({
       url: ":memory:",
     });
 
@@ -29,9 +29,9 @@ async function testExample() {
       client,
       debugLogs: false,
     });
-    
+
     const db = testAdapter({});
-    
+
     // Create a user directly through the adapter
     const user = await db.create({
       model: "user",
@@ -68,7 +68,7 @@ async function testExample() {
 
     const tableNames = tables.rows?.map((row: any) => row.name) || [];
     const requiredTables = ["user"];
-    
+
     for (const table of requiredTables) {
       if (!tableNames.includes(table)) {
         throw new Error(`Required table '${table}' not found`);
@@ -79,7 +79,6 @@ async function testExample() {
 
     console.log("\n🎉 All example tests passed!");
     return true;
-    
   } catch (error) {
     console.error("❌ Example test failed:", error);
     return false;
@@ -87,6 +86,6 @@ async function testExample() {
 }
 
 // Run tests and exit with appropriate code
-testExample().then(success => {
+testExample().then((success) => {
   process.exit(success ? 0 : 1);
 });

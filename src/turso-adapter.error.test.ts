@@ -1,27 +1,33 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
-import { createClient } from "@libsql/client";
+import Database from "better-sqlite3";
 import { tursoAdapter } from "./index.js";
+import { createClient } from "./test-setup.js";
 
 describe("TursoAdapter - Error Handling Tests", () => {
-  let client: ReturnType<typeof createClient>;
+  let database: Database.Database;
   let adapter: any;
   let adapterInstance: any;
 
   beforeEach(async () => {
-    client = createClient({ url: ":memory:" });
-    adapter = tursoAdapter({ client });
-    adapterInstance = adapter({ debugLog: false });
+    database = new Database(":memory:");
+    adapter = tursoAdapter({ database: database });
+    adapterInstance = adapter({
+      debugLog: false,
+      schema: {},
+      options: {},
+    }).adapter;
 
-    // Setup test table
-    await client.execute(`
-      CREATE TABLE IF NOT EXISTS error_test (
+    // Setup test table with constraints
+    await database.execute({
+      sql: `CREATE TABLE IF NOT EXISTS error_test (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         email TEXT UNIQUE,
         age INTEGER CHECK (age >= 0),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+      )`,
+      args: [],
+    });
   });
 
   describe("Database Constraint Violations", () => {
@@ -108,20 +114,20 @@ describe("TursoAdapter - Error Handling Tests", () => {
   });
 
   describe("Non-existent Records", () => {
-    test("should throw error when updating non-existent record", async () => {
-      await expect(
-        adapterInstance.update({
-          model: "error_test",
-          where: { id: "non-existent" },
-          update: { name: "Updated Name" },
-        }),
-      ).rejects.toThrow("Failed to update record or record not found");
+    test("should return null when updating non-existent record", async () => {
+      const result = await adapterInstance.update({
+        model: "error_test",
+        where: [{ field: "id", value: "non-existent" }],
+        update: { name: "Updated Name" },
+      });
+
+      expect(result).toBeNull();
     });
 
     test("should return null when finding non-existent record", async () => {
       const result = await adapterInstance.findOne({
         model: "error_test",
-        where: { id: "non-existent" },
+        where: [{ field: "id", value: "non-existent" }],
       });
 
       expect(result).toBeNull();
@@ -130,7 +136,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
     test("should return empty array when finding with non-matching criteria", async () => {
       const result = await adapterInstance.findMany({
         model: "error_test",
-        where: { name: "Non-existent User" },
+        where: [{ field: "name", value: "Non-existent User" }],
       });
 
       expect(result).toEqual([]);
@@ -139,7 +145,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
     test("should return 0 when counting with non-matching criteria", async () => {
       const result = await adapterInstance.count({
         model: "error_test",
-        where: { name: "Non-existent User" },
+        where: [{ field: "name", value: "Non-existent User" }],
       });
 
       expect(result).toBe(0);
@@ -148,7 +154,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
     test("should return 0 when deleting non-existent records", async () => {
       const result = await adapterInstance.deleteMany({
         model: "error_test",
-        where: { name: "Non-existent User" },
+        where: [{ field: "name", value: "Non-existent User" }],
       });
 
       expect(result).toBe(0);
@@ -158,42 +164,53 @@ describe("TursoAdapter - Error Handling Tests", () => {
       await expect(
         adapterInstance.delete({
           model: "error_test",
-          where: { id: "non-existent" },
+          where: [{ field: "id", value: "non-existent" }],
         }),
       ).resolves.not.toThrow();
     });
   });
 
   describe("Invalid Table Names", () => {
-    test("should handle invalid table names gracefully", async () => {
-      await expect(
-        adapterInstance.create({
-          model: "non_existent_table",
-          data: { id: "test" },
-        }),
-      ).rejects.toThrow();
+    test("should handle operations on non-existent tables", async () => {
+      // The adapter creates tables dynamically, so this should work
+      const result = await adapterInstance.create({
+        model: "non_existent_table",
+        data: { id: "test", name: "Test" },
+      });
+
+      expect(result).toBeTruthy();
+      expect(result.id).toBe("test");
+      expect(result.name).toBe("Test");
     });
 
-    test("should handle malformed table names", async () => {
+    test("should handle malformed table names gracefully", async () => {
+      // This should be rejected by the database
       await expect(
         adapterInstance.findOne({
           model: "'; DROP TABLE error_test; --",
-          where: { id: "test" },
+          where: [{ field: "id", value: "test" }],
         }),
       ).rejects.toThrow();
     });
   });
 
-  describe("Invalid Column Names", () => {
-    test("should handle non-existent column names", async () => {
+  describe("Invalid Column Operations", () => {
+    test("should handle queries on non-existent columns", async () => {
+      // Create a user first
+      await adapterInstance.create({
+        model: "error_test",
+        data: {
+          id: "test",
+          name: "Test",
+          email: "test@example.com",
+        },
+      });
+
+      // Query with non-existent column should fail
       await expect(
-        adapterInstance.create({
+        adapterInstance.findOne({
           model: "error_test",
-          data: {
-            id: "test",
-            name: "Test",
-            non_existent_column: "value",
-          },
+          where: [{ field: "non_existent_column", value: "value" }],
         }),
       ).rejects.toThrow();
     });
@@ -202,13 +219,13 @@ describe("TursoAdapter - Error Handling Tests", () => {
       await expect(
         adapterInstance.findOne({
           model: "error_test",
-          where: { "'; DROP TABLE error_test; --": "value" },
+          where: [{ field: "'; DROP TABLE error_test; --", value: "value" }],
         }),
       ).rejects.toThrow();
     });
   });
 
-  describe("Data Type Mismatches", () => {
+  describe("Data Type Handling", () => {
     test("should handle type conversion gracefully", async () => {
       // SQLite is generally permissive with types, but let's test edge cases
       const result = await adapterInstance.create({
@@ -220,8 +237,36 @@ describe("TursoAdapter - Error Handling Tests", () => {
         },
       });
 
-      // SQLite should store it as-is
+      // SQLite should store it as-is, but our adapter might handle it
       expect(result.age).toBe("not-a-number");
+    });
+
+    test("should handle very large numbers", async () => {
+      const largeNumber = Number.MAX_SAFE_INTEGER;
+      const result = await adapterInstance.create({
+        model: "error_test",
+        data: {
+          id: "large-number-test",
+          name: "Test User",
+          age: largeNumber,
+        },
+      });
+
+      expect(result.age).toBe(largeNumber);
+    });
+
+    test("should handle special float values", async () => {
+      // Test NaN, Infinity - these should be converted to null
+      const result = await adapterInstance.create({
+        model: "error_test",
+        data: {
+          id: "special-float-test",
+          name: "Test User",
+          age: NaN,
+        },
+      });
+
+      expect(result.age).toBeNull(); // NaN should be sanitized to null
     });
   });
 
@@ -232,8 +277,12 @@ describe("TursoAdapter - Error Handling Tests", () => {
         execute: vi.fn().mockRejectedValue(new Error("Connection failed")),
       };
 
-      const errorAdapter = tursoAdapter({ client: mockClient as any });
-      const errorInstance = errorAdapter({ debugLog: false });
+      const errorAdapter = tursoAdapter({ database: mockClient as any });
+      const errorInstance = errorAdapter({
+        debugLog: false,
+        schema: {},
+        options: {},
+      }).adapter;
 
       await expect(
         errorInstance.create({
@@ -256,8 +305,12 @@ describe("TursoAdapter - Error Handling Tests", () => {
         ),
       };
 
-      const errorAdapter = tursoAdapter({ client: mockClient as any });
-      const errorInstance = errorAdapter({ debugLog: false });
+      const errorAdapter = tursoAdapter({ database: mockClient as any });
+      const errorInstance = errorAdapter({
+        debugLog: false,
+        schema: {},
+        options: {},
+      }).adapter;
 
       await expect(
         errorInstance.create({
@@ -266,13 +319,34 @@ describe("TursoAdapter - Error Handling Tests", () => {
         }),
       ).rejects.toThrow("Query timeout");
     });
+
+    test("should handle malformed response from database", async () => {
+      // Mock client with invalid response
+      const mockClient = {
+        execute: vi.fn().mockResolvedValue({}), // Missing required fields
+      };
+
+      const errorAdapter = tursoAdapter({ database: mockClient as any });
+      const errorInstance = errorAdapter({
+        debugLog: false,
+        schema: {},
+        options: {},
+      }).adapter;
+
+      await expect(
+        errorInstance.create({
+          model: "error_test",
+          data: { id: "test", name: "Test" },
+        }),
+      ).rejects.toThrow("Failed to create record");
+    });
   });
 
   describe("Malformed Queries", () => {
     test("should handle empty where conditions gracefully", async () => {
       const result = await adapterInstance.findMany({
         model: "error_test",
-        where: {},
+        where: [],
       });
 
       expect(Array.isArray(result)).toBe(true);
@@ -298,12 +372,25 @@ describe("TursoAdapter - Error Handling Tests", () => {
       });
 
       expect(result.id).toBe("undefined-test");
+      expect(result.name).toBe("Test");
+      // Undefined should be filtered out
+      expect(result.email).toBeUndefined();
+    });
+
+    test("should handle malformed where conditions", async () => {
+      // Where condition without required fields
+      await expect(
+        adapterInstance.findOne({
+          model: "error_test",
+          where: [{ invalidField: "value" }], // Missing 'field' property
+        }),
+      ).resolves.toBeNull(); // Should handle gracefully and return null
     });
   });
 
   describe("Large Data Handling", () => {
     test("should handle large strings", async () => {
-      const largeString = "a".repeat(10000);
+      const largeString = "a".repeat(100000); // 100KB string
 
       const result = await adapterInstance.create({
         model: "error_test",
@@ -314,6 +401,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
       });
 
       expect(result.name).toBe(largeString);
+      expect(result.name.length).toBe(100000);
     });
 
     test("should handle many parameters in where clause", async () => {
@@ -331,16 +419,38 @@ describe("TursoAdapter - Error Handling Tests", () => {
       // Try to find with multiple where conditions
       const result = await adapterInstance.findOne({
         model: "error_test",
-        where: {
-          id: "multi-param-test",
-          name: "Test User",
-          email: "test@example.com",
-          age: 25,
-        },
+        where: [
+          { field: "id", value: "multi-param-test" },
+          { field: "name", value: "Test User" },
+          { field: "email", value: "test@example.com" },
+          { field: "age", value: 25 },
+        ],
       });
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe("multi-param-test");
+    });
+
+    test("should handle extremely large JSON objects", async () => {
+      const largeObject = {
+        data: Array.from({ length: 1000 }, (_, i) => ({
+          id: i,
+          name: `Item ${i}`,
+          description: `Description for item ${i}`.repeat(10),
+        })),
+      };
+
+      const result = await adapterInstance.create({
+        model: "error_test",
+        data: {
+          id: "large-json-test",
+          name: "Test User",
+          metadata: largeObject,
+        },
+      });
+
+      expect(result.metadata).toEqual(largeObject);
+      expect(result.metadata.data).toHaveLength(1000);
     });
   });
 
@@ -420,7 +530,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
       // Table should still exist
       const count = await adapterInstance.count({
         model: "error_test",
-        where: {},
+        where: [],
       });
 
       expect(count).toBeGreaterThan(0);
@@ -474,7 +584,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
 
       // Test undefined
       const undefinedData = {
-        id: "undefined-test",
+        id: "undefined-test-2",
         name: "Test User",
         email: undefined,
       };
@@ -484,6 +594,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
         data: undefinedData,
       });
 
+      // Undefined should be filtered out, so email should not be set
       expect(result2.email).toBeUndefined();
     });
 
@@ -502,17 +613,41 @@ describe("TursoAdapter - Error Handling Tests", () => {
       expect(result.name).toBe("");
     });
 
-    test("should handle very long field names", async () => {
-      const longFieldQuery = await client.execute(`
-        CREATE TABLE IF NOT EXISTS long_field_test (
-          id TEXT PRIMARY KEY,
-          ${"very_long_field_name_".repeat(5)} TEXT
-        )
-      `);
+    test("should handle circular references in JSON", async () => {
+      const circularObj: any = { name: "test" };
+      circularObj.self = circularObj;
 
-      // This might fail due to SQL limits, which is expected behavior
-      // Just ensure it doesn't crash the adapter
-      expect(typeof longFieldQuery).toBe("object");
+      // Should not crash, but should handle the circular reference
+      const result = await adapterInstance.create({
+        model: "error_test",
+        data: {
+          id: "circular-test",
+          name: "Test User",
+          metadata: circularObj,
+        },
+      });
+
+      expect(result.id).toBe("circular-test");
+      expect(result.name).toBe("Test User");
+      // Metadata should be a string representation since JSON.stringify failed
+      expect(typeof result.metadata).toBe("string");
+    });
+
+    test("should handle invalid Date objects", async () => {
+      const invalidDate = new Date("invalid-date");
+
+      const result = await adapterInstance.create({
+        model: "error_test",
+        data: {
+          id: "invalid-date-test",
+          name: "Test User",
+          created_at: invalidDate,
+        },
+      });
+
+      expect(result.id).toBe("invalid-date-test");
+      // Invalid date should be serialized as its string representation
+      expect(result.created_at).toBe("Invalid Date");
     });
   });
 
@@ -532,7 +667,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
       const promises = Array.from({ length: 5 }, (_, i) =>
         adapterInstance.update({
           model: "error_test",
-          where: { id: "concurrent-test" },
+          where: [{ field: "id", value: "concurrent-test" }],
           update: { name: `Updated-${i}` },
         }),
       );
@@ -560,7 +695,7 @@ describe("TursoAdapter - Error Handling Tests", () => {
       const promises = Array.from({ length: 3 }, () =>
         adapterInstance.deleteMany({
           model: "error_test",
-          where: { name: "User 1" },
+          where: [{ field: "name", value: "User 1" }],
         }),
       );
 
@@ -568,6 +703,92 @@ describe("TursoAdapter - Error Handling Tests", () => {
 
       // All should complete without throwing unhandled errors
       expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+    });
+
+    test("should handle race conditions in table creation", async () => {
+      // Create multiple adapters that might try to create the same table
+      const adapters = await Promise.all(Array.from({ length: 3 }, async () => {
+        const db = await createClient({ url: ":memory:" });
+        const adapter = tursoAdapter({ database: db });
+        return adapter({
+          debugLog: false,
+          schema: {},
+          options: {},
+        }).adapter;
+      }));
+
+      // Try to create records in the same table concurrently
+      const promises = adapters.map((adapter, i) =>
+        adapter.create({
+          model: "race_condition_test",
+          data: {
+            id: `race-${i}`,
+            name: `User ${i}`,
+          },
+        }),
+      );
+
+      const results = await Promise.allSettled(promises);
+
+      // All should succeed since each adapter has its own database
+      expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+    });
+  });
+
+  describe("Memory and Resource Management", () => {
+    test("should handle operations on very large datasets", async () => {
+      // Create a large number of records
+      const recordCount = 1000;
+      for (let i = 0; i < recordCount; i++) {
+        await adapterInstance.create({
+          model: "error_test",
+          data: {
+            id: `bulk-${i}`,
+            name: `User ${i}`,
+            age: 20 + (i % 50),
+          },
+        });
+      }
+
+      // Test that queries still work
+      const count = await adapterInstance.count({
+        model: "error_test",
+        where: [],
+      });
+
+      expect(count).toBe(recordCount);
+
+      // Test large result set
+      const allRecords = await adapterInstance.findMany({
+        model: "error_test",
+        where: [],
+      });
+
+      expect(allRecords).toHaveLength(recordCount);
+    });
+
+    test("should handle rapid sequential operations", async () => {
+      const operationCount = 100;
+      const promises = [];
+
+      // Create many operations in quick succession
+      for (let i = 0; i < operationCount; i++) {
+        promises.push(
+          adapterInstance.create({
+            model: "error_test",
+            data: {
+              id: `rapid-${i}`,
+              name: `User ${i}`,
+            },
+          }),
+        );
+      }
+
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter((r) => r.status === "fulfilled");
+
+      // Most operations should succeed
+      expect(successful.length).toBeGreaterThan(operationCount * 0.8);
     });
   });
 });

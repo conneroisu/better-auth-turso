@@ -66,21 +66,33 @@ export default function DashboardPage() {
             </h3>
             <div className="space-y-2 text-sm">
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">ID:</span>{" "}
-                <span className="text-gray-900 dark:text-gray-100">{session.data.user.id}</span>
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  ID:
+                </span>{" "}
+                <span className="text-gray-900 dark:text-gray-100">
+                  {session.data.user.id}
+                </span>
               </div>
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Email:</span>{" "}
-                <span className="text-gray-900 dark:text-gray-100">{session.data.user.email}</span>
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Email:
+                </span>{" "}
+                <span className="text-gray-900 dark:text-gray-100">
+                  {session.data.user.email}
+                </span>
               </div>
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Name:</span>{" "}
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Name:
+                </span>{" "}
                 <span className="text-gray-900 dark:text-gray-100">
                   {session.data.user.name || "Not provided"}
                 </span>
               </div>
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Verified:</span>{" "}
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Verified:
+                </span>{" "}
                 <span className="text-gray-900 dark:text-gray-100">
                   {session.data.user.emailVerified ? "Yes" : "No"}
                 </span>
@@ -94,21 +106,31 @@ export default function DashboardPage() {
             </h3>
             <div className="space-y-2 text-sm">
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Session ID:</span>{" "}
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Session ID:
+                </span>{" "}
                 <span className="text-gray-900 dark:text-gray-100 font-mono text-xs">
                   {session.data.session.id}
                 </span>
               </div>
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Created:</span>{" "}
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Created:
+                </span>{" "}
                 <span className="text-gray-900 dark:text-gray-100">
-                  {new Date(session.data.session.createdAt).toLocaleDateString()}
+                  {new Date(
+                    session.data.session.createdAt,
+                  ).toLocaleDateString()}
                 </span>
               </div>
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Expires:</span>{" "}
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Expires:
+                </span>{" "}
                 <span className="text-gray-900 dark:text-gray-100">
-                  {new Date(session.data.session.expiresAt).toLocaleDateString()}
+                  {new Date(
+                    session.data.session.expiresAt,
+                  ).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -120,15 +142,25 @@ export default function DashboardPage() {
             </h3>
             <div className="space-y-2 text-sm">
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Database:</span>{" "}
-                <span className="text-gray-900 dark:text-gray-100">Turso (libSQL)</span>
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Database:
+                </span>{" "}
+                <span className="text-gray-900 dark:text-gray-100">
+                  Turso (libSQL)
+                </span>
               </div>
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Adapter:</span>{" "}
-                <span className="text-gray-900 dark:text-gray-100">better-auth-turso</span>
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Adapter:
+                </span>{" "}
+                <span className="text-gray-900 dark:text-gray-100">
+                  better-auth-turso
+                </span>
               </div>
               <div>
-                <span className="font-medium text-gray-600 dark:text-gray-400">Storage:</span>{" "}
+                <span className="font-medium text-gray-600 dark:text-gray-400">
+                  Storage:
+                </span>{" "}
                 <span className="text-gray-900 dark:text-gray-100">
                   {process.env.TURSO_DATABASE_URL ? "Remote" : "Local"}
                 </span>

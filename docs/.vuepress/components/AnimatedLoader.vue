@@ -8,25 +8,27 @@
           <div class="ring ring-3"></div>
           <div class="ring ring-4"></div>
         </div>
-        
+
         <div class="loader-icon">
           <div class="gear gear-1">⚙️</div>
           <div class="gear gear-2">⚙️</div>
         </div>
-        
+
         <div class="progress-bar">
           <div class="progress-fill" :style="{ width: progress + '%' }"></div>
         </div>
-        
+
         <div class="loading-text">
-          <span v-for="(char, index) in loadingMessage" 
-                :key="index" 
-                :style="{ animationDelay: index * 0.1 + 's' }"
-                class="char">
-            {{ char === ' ' ? '\u00A0' : char }}
+          <span
+            v-for="(char, index) in loadingMessage"
+            :key="index"
+            :style="{ animationDelay: index * 0.1 + 's' }"
+            class="char"
+          >
+            {{ char === " " ? "\u00A0" : char }}
           </span>
         </div>
-        
+
         <div class="stats">
           <div class="stat">
             <span class="stat-label">Progress:</span>
@@ -39,102 +41,101 @@
         </div>
       </div>
     </div>
-    
+
     <div class="controls">
       <button @click="startLoading" :disabled="isLoading" class="start-btn">
-        {{ isLoading ? '⏳ Loading...' : '🚀 Start Loading Demo' }}
+        {{ isLoading ? "⏳ Loading..." : "🚀 Start Loading Demo" }}
       </button>
-      <button @click="resetLoader" class="reset-btn">
-        🔄 Reset
-      </button>
+      <button @click="resetLoader" class="reset-btn">🔄 Reset</button>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'AnimatedLoader',
+  name: "AnimatedLoader",
   data() {
     return {
       progress: 0,
       isLoading: false,
       elapsedTime: 0,
-      loadingMessage: 'Loading awesome content...',
+      loadingMessage: "Loading awesome content...",
       intervalId: null,
-      startTime: null
-    }
+      startTime: null,
+    };
   },
   methods: {
     startLoading() {
-      if (this.isLoading) return
-      
-      this.isLoading = true
-      this.progress = 0
-      this.elapsedTime = 0
-      this.startTime = Date.now()
-      
+      if (this.isLoading) return;
+
+      this.isLoading = true;
+      this.progress = 0;
+      this.elapsedTime = 0;
+      this.startTime = Date.now();
+
       // Simulate realistic loading with variable speed
       const steps = [
-        { target: 15, duration: 800 },   // Initial loading
-        { target: 35, duration: 1200 },  // Processing
-        { target: 65, duration: 2000 },  // Heavy work
-        { target: 85, duration: 1000 },  // Almost done
-        { target: 100, duration: 500 }   // Finalizing
-      ]
-      
-      let currentStep = 0
-      let currentProgress = 0
-      
+        { target: 15, duration: 800 }, // Initial loading
+        { target: 35, duration: 1200 }, // Processing
+        { target: 65, duration: 2000 }, // Heavy work
+        { target: 85, duration: 1000 }, // Almost done
+        { target: 100, duration: 500 }, // Finalizing
+      ];
+
+      let currentStep = 0;
+      let currentProgress = 0;
+
       const updateProgress = () => {
         if (currentStep >= steps.length) {
-          this.isLoading = false
-          clearInterval(this.intervalId)
-          return
+          this.isLoading = false;
+          clearInterval(this.intervalId);
+          return;
         }
-        
-        const step = steps[currentStep]
-        const increment = (step.target - currentProgress) / (step.duration / 50)
-        
+
+        const step = steps[currentStep];
+        const increment =
+          (step.target - currentProgress) / (step.duration / 50);
+
         this.intervalId = setInterval(() => {
-          this.elapsedTime = Date.now() - this.startTime
-          
+          this.elapsedTime = Date.now() - this.startTime;
+
           if (currentProgress < step.target) {
-            currentProgress += increment
-            this.progress = Math.min(currentProgress, step.target)
+            currentProgress += increment;
+            this.progress = Math.min(currentProgress, step.target);
           } else {
-            clearInterval(this.intervalId)
-            currentProgress = step.target
-            currentStep++
-            setTimeout(updateProgress, 100)
+            clearInterval(this.intervalId);
+            currentProgress = step.target;
+            currentStep++;
+            setTimeout(updateProgress, 100);
           }
-        }, 50)
-      }
-      
-      updateProgress()
+        }, 50);
+      };
+
+      updateProgress();
     },
-    
+
     resetLoader() {
-      this.isLoading = false
-      this.progress = 0
-      this.elapsedTime = 0
+      this.isLoading = false;
+      this.progress = 0;
+      this.elapsedTime = 0;
       if (this.intervalId) {
-        clearInterval(this.intervalId)
+        clearInterval(this.intervalId);
       }
     },
-    
+
     formatTime(ms) {
-      const seconds = Math.floor(ms / 1000)
-      const milliseconds = Math.floor((ms % 1000) / 10)
-      return `${seconds}.${milliseconds.toString().padStart(2, '0')}s`
-    }
+      const seconds = Math.floor(ms / 1000);
+      const milliseconds = Math.floor((ms % 1000) / 10);
+      return `${seconds}.${milliseconds.toString().padStart(2, "0")}s`;
+    },
   },
-  
+
   beforeDestroy() {
     if (this.intervalId) {
-      clearInterval(this.intervalId)
+      clearInterval(this.intervalId);
     }
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -146,7 +147,8 @@ export default {
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
   color: white;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .loader-container {
@@ -274,7 +276,7 @@ export default {
 }
 
 .progress-fill::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -311,7 +313,9 @@ export default {
 }
 
 @keyframes bounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: translateY(0);
   }
   40% {
@@ -354,7 +358,8 @@ export default {
   margin-top: 30px;
 }
 
-.start-btn, .reset-btn {
+.start-btn,
+.reset-btn {
   padding: 12px 24px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.1);
@@ -367,7 +372,8 @@ export default {
   backdrop-filter: blur(10px);
 }
 
-.start-btn:hover:not(:disabled), .reset-btn:hover {
+.start-btn:hover:not(:disabled),
+.reset-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
@@ -393,24 +399,25 @@ export default {
     margin: 20px;
     padding: 20px;
   }
-  
-  .ring-3, .ring-4 {
+
+  .ring-3,
+  .ring-4 {
     display: none;
   }
-  
+
   .gear {
     font-size: 2em;
   }
-  
+
   .gear-2 {
     font-size: 1.5em;
   }
-  
+
   .stats {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .controls {
     flex-direction: column;
   }

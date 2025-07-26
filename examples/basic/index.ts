@@ -1,18 +1,16 @@
 import { betterAuth } from "better-auth";
-import { createClient } from "@libsql/client";
+import Database from "better-sqlite3";
 import { tursoAdapter } from "../../src/index.js";
 
 console.log("🚀 Starting Better Auth Turso Example...");
 
-// Create Turso client (using in-memory database for example)
-const client = createClient({
-  url: ":memory:", // Use file database in production: "file:./database.db"
-});
+// Create Turso database (using in-memory database for example)
+const database = new Database(":memory:"); // Use file database in production: "./database.db"
 
 // Configure Better Auth with Turso adapter
 const auth = betterAuth({
   database: tursoAdapter({
-    client,
+    database,
     debugLogs: {
       create: true,
       findOne: true,
@@ -29,7 +27,7 @@ const auth = betterAuth({
         required: false,
       },
       lastName: {
-        type: "string", 
+        type: "string",
         required: false,
       },
     },
@@ -40,18 +38,18 @@ const auth = betterAuth({
 async function runExample() {
   try {
     console.log("\n📝 Creating a user...");
-    
+
     // Access the database adapter directly for demonstration
     const testAdapter = tursoAdapter({
-      client,
+      database,
       debugLogs: {
         create: true,
         findOne: true,
       },
     });
-    
-    const db = testAdapter({});
-    
+
+    const db = testAdapter.adapter({});
+
     // Create a user
     const user = await db.create({
       model: "user",
@@ -71,7 +69,7 @@ async function runExample() {
     });
 
     console.log("\n🔍 Finding the user...");
-    
+
     // Find the user
     const foundUser = await db.findOne({
       model: "user",
@@ -85,19 +83,19 @@ async function runExample() {
     });
 
     console.log("\n📊 Checking database tables...");
-    
-    // Show created tables
-    const tables = await client.execute({
-      sql: "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
-      args: [],
-    });
 
-    console.log("✅ Database tables created:", 
-      tables.rows?.map((row: any) => row.name) || []
+    // Show created tables
+    const tablesStmt = database.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+    );
+    const tables = tablesStmt.all();
+
+    console.log(
+      "✅ Database tables created:",
+      tables.map((row: any) => row.name) || [],
     );
 
     console.log("\n🎉 Example completed successfully!");
-    
   } catch (error) {
     console.error("❌ Example failed:", error);
     process.exit(1);

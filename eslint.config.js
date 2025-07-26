@@ -22,6 +22,7 @@ export default tseslint.config(
       "src/**/*.spec.ts",
       "src/test-setup.ts",
       "eslint.config.js",
+      "docs/**/*",
     ],
   },
   eslint.configs.recommended,

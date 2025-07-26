@@ -1,16 +1,12 @@
 import { betterAuth } from "better-auth";
-import { createClient } from "@libsql/client";
-import { tursoAdapter } from "../../src/index";
+import { tursoAdapter } from "../../dist/src/index.js";
 
-// Create Turso client for the example
-const client = createClient({
-  url: process.env.TURSO_DATABASE_URL || "file:./local.db",
-  authToken: process.env.TURSO_AUTH_TOKEN,
-});
+// Configure Turso database for the example
+const databasePath = process.env.TURSO_DATABASE_URL || "./local.db";
 
 export const auth = betterAuth({
   database: tursoAdapter({
-    client,
+    database: databasePath,
     debugLogs: {
       create: process.env.NODE_ENV === "development",
       findOne: process.env.NODE_ENV === "development",
@@ -33,6 +29,7 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
   },
-  secret: process.env.BETTER_AUTH_SECRET || "your-secret-here-change-in-production",
+  secret:
+    process.env.BETTER_AUTH_SECRET || "your-secret-here-change-in-production",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
 });

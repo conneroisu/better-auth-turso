@@ -4,7 +4,7 @@
       <h3>🚀 Advanced VuePress Features</h3>
       <div class="demo-controls">
         <button @click="toggleTheme" class="theme-toggle">
-          {{ isDark ? '☀️' : '🌙' }} {{ isDark ? 'Light' : 'Dark' }}
+          {{ isDark ? "☀️" : "🌙" }} {{ isDark ? "Light" : "Dark" }}
         </button>
         <button @click="randomizeData" class="randomize-btn">
           🎲 Randomize
@@ -17,16 +17,25 @@
       <div class="demo-card">
         <h4>📊 Real-time Data Visualization</h4>
         <div class="chart-container">
-          <div class="chart-bar" v-for="(value, index) in chartData" :key="index">
-            <div 
-              class="bar" 
-              :style="{ height: value + '%', backgroundColor: getBarColor(index) }"
+          <div
+            class="chart-bar"
+            v-for="(value, index) in chartData"
+            :key="index"
+          >
+            <div
+              class="bar"
+              :style="{
+                height: value + '%',
+                backgroundColor: getBarColor(index),
+              }"
               :title="`Value: ${value}%`"
             ></div>
             <span class="bar-label">{{ getBarLabel(index) }}</span>
           </div>
         </div>
-        <p class="chart-info">Data updates every {{ updateInterval / 1000 }}s</p>
+        <p class="chart-info">
+          Data updates every {{ updateInterval / 1000 }}s
+        </p>
       </div>
 
       <!-- Interactive Form -->
@@ -35,26 +44,28 @@
         <form @submit.prevent="submitForm" class="demo-form">
           <div class="form-group">
             <label>Name:</label>
-            <input 
-              v-model="form.name" 
-              type="text" 
+            <input
+              v-model="form.name"
+              type="text"
               :class="{ error: errors.name }"
               @blur="validateName"
-            >
+            />
             <span v-if="errors.name" class="error-text">{{ errors.name }}</span>
           </div>
-          
+
           <div class="form-group">
             <label>Email:</label>
-            <input 
-              v-model="form.email" 
-              type="email" 
+            <input
+              v-model="form.email"
+              type="email"
               :class="{ error: errors.email }"
               @blur="validateEmail"
-            >
-            <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
+            />
+            <span v-if="errors.email" class="error-text">{{
+              errors.email
+            }}</span>
           </div>
-          
+
           <div class="form-group">
             <label>Framework:</label>
             <select v-model="form.framework">
@@ -67,7 +78,7 @@
           </div>
 
           <button type="submit" :disabled="!isFormValid" class="submit-btn">
-            {{ isSubmitting ? '⏳ Submitting...' : '🚀 Submit' }}
+            {{ isSubmitting ? "⏳ Submitting..." : "🚀 Submit" }}
           </button>
         </form>
 
@@ -108,7 +119,11 @@
           <div class="watch-log">
             <h5>📝 Change Log:</h5>
             <div class="log-entries">
-              <div v-for="(entry, index) in changeLog" :key="index" class="log-entry">
+              <div
+                v-for="(entry, index) in changeLog"
+                :key="index"
+                class="log-entry"
+              >
                 <span class="timestamp">{{ entry.timestamp }}</span>
                 <span class="change">{{ entry.change }}</span>
               </div>
@@ -122,7 +137,7 @@
         <h4>🌐 API Integration & Loading States</h4>
         <div class="api-demo">
           <button @click="fetchData" :disabled="isLoading" class="fetch-btn">
-            {{ isLoading ? '⏳ Loading...' : '📡 Fetch Random Data' }}
+            {{ isLoading ? "⏳ Loading..." : "📡 Fetch Random Data" }}
           </button>
 
           <div v-if="isLoading" class="loading-spinner">
@@ -168,191 +183,210 @@
 
 <script>
 export default {
-  name: 'AdvancedDemo',
+  name: "AdvancedDemo",
   data() {
     return {
       isDark: false,
       chartData: [45, 72, 38, 89, 56, 23, 67],
       updateInterval: 3000,
       intervalId: null,
-      
+
       // Form data
       form: {
-        name: '',
-        email: '',
-        framework: ''
+        name: "",
+        email: "",
+        framework: "",
       },
       errors: {},
       isSubmitting: false,
       submissionResult: null,
-      
+
       // State management
       counterA: 5,
       counterB: 3,
       changeLog: [],
-      
+
       // API demo
       isLoading: false,
       apiData: null,
-      apiError: null
-    }
+      apiError: null,
+    };
   },
   computed: {
     sum() {
-      return this.counterA + this.counterB
+      return this.counterA + this.counterB;
     },
     product() {
-      return this.counterA * this.counterB
+      return this.counterA * this.counterB;
     },
     average() {
-      return (this.counterA + this.counterB) / 2
+      return (this.counterA + this.counterB) / 2;
     },
     isFormValid() {
-      return this.form.name && this.form.email && !this.errors.name && !this.errors.email
-    }
+      return (
+        this.form.name &&
+        this.form.email &&
+        !this.errors.name &&
+        !this.errors.email
+      );
+    },
   },
   watch: {
     counterA(newVal, oldVal) {
-      this.logChange(`Counter A: ${oldVal} → ${newVal}`)
+      this.logChange(`Counter A: ${oldVal} → ${newVal}`);
     },
     counterB(newVal, oldVal) {
-      this.logChange(`Counter B: ${oldVal} → ${newVal}`)
+      this.logChange(`Counter B: ${oldVal} → ${newVal}`);
     },
     sum(newVal) {
-      this.logChange(`Sum updated to: ${newVal}`)
-    }
+      this.logChange(`Sum updated to: ${newVal}`);
+    },
   },
   mounted() {
-    this.startChartUpdates()
-    this.logChange('Component mounted')
+    this.startChartUpdates();
+    this.logChange("Component mounted");
   },
   beforeDestroy() {
     if (this.intervalId) {
-      clearInterval(this.intervalId)
+      clearInterval(this.intervalId);
     }
   },
   methods: {
     toggleTheme() {
-      this.isDark = !this.isDark
+      this.isDark = !this.isDark;
     },
-    
+
     randomizeData() {
-      this.chartData = this.chartData.map(() => Math.floor(Math.random() * 100))
+      this.chartData = this.chartData.map(() =>
+        Math.floor(Math.random() * 100),
+      );
     },
-    
+
     startChartUpdates() {
       this.intervalId = setInterval(() => {
-        const index = Math.floor(Math.random() * this.chartData.length)
-        const newValue = Math.floor(Math.random() * 100)
-        this.$set(this.chartData, index, newValue)
-      }, this.updateInterval)
+        const index = Math.floor(Math.random() * this.chartData.length);
+        const newValue = Math.floor(Math.random() * 100);
+        this.$set(this.chartData, index, newValue);
+      }, this.updateInterval);
     },
-    
+
     getBarColor(index) {
-      const colors = ['#3eaf7c', '#42b883', '#35495e', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4']
-      return colors[index % colors.length]
+      const colors = [
+        "#3eaf7c",
+        "#42b883",
+        "#35495e",
+        "#ff6b6b",
+        "#4ecdc4",
+        "#45b7d1",
+        "#96ceb4",
+      ];
+      return colors[index % colors.length];
     },
-    
+
     getBarLabel(index) {
-      const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-      return labels[index] || `Day ${index + 1}`
+      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      return labels[index] || `Day ${index + 1}`;
     },
-    
+
     validateName() {
       if (!this.form.name.trim()) {
-        this.$set(this.errors, 'name', 'Name is required')
+        this.$set(this.errors, "name", "Name is required");
       } else if (this.form.name.length < 2) {
-        this.$set(this.errors, 'name', 'Name must be at least 2 characters')
+        this.$set(this.errors, "name", "Name must be at least 2 characters");
       } else {
-        this.$delete(this.errors, 'name')
+        this.$delete(this.errors, "name");
       }
     },
-    
+
     validateEmail() {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!this.form.email.trim()) {
-        this.$set(this.errors, 'email', 'Email is required')
+        this.$set(this.errors, "email", "Email is required");
       } else if (!emailRegex.test(this.form.email)) {
-        this.$set(this.errors, 'email', 'Please enter a valid email')
+        this.$set(this.errors, "email", "Please enter a valid email");
       } else {
-        this.$delete(this.errors, 'email')
+        this.$delete(this.errors, "email");
       }
     },
-    
+
     async submitForm() {
-      this.validateName()
-      this.validateEmail()
-      
-      if (!this.isFormValid) return
-      
-      this.isSubmitting = true
-      
+      this.validateName();
+      this.validateEmail();
+
+      if (!this.isFormValid) return;
+
+      this.isSubmitting = true;
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       this.submissionResult = {
         ...this.form,
         timestamp: new Date().toISOString(),
-        id: Math.random().toString(36).substr(2, 9)
-      }
-      
-      this.isSubmitting = false
-      this.logChange('Form submitted successfully')
+        id: Math.random().toString(36).substr(2, 9),
+      };
+
+      this.isSubmitting = false;
+      this.logChange("Form submitted successfully");
     },
-    
+
     logChange(change) {
-      const timestamp = new Date().toLocaleTimeString()
-      this.changeLog.unshift({ timestamp, change })
-      
+      const timestamp = new Date().toLocaleTimeString();
+      this.changeLog.unshift({ timestamp, change });
+
       // Keep only last 10 entries
       if (this.changeLog.length > 10) {
-        this.changeLog = this.changeLog.slice(0, 10)
+        this.changeLog = this.changeLog.slice(0, 10);
       }
     },
-    
+
     async fetchData() {
-      this.isLoading = true
-      this.apiError = null
-      this.apiData = null
-      
+      this.isLoading = true;
+      this.apiError = null;
+      this.apiData = null;
+
       try {
         // Simulate API call with random data
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
         // Simulate occasional errors
         if (Math.random() < 0.2) {
-          throw new Error('Network error: Unable to fetch data')
+          throw new Error("Network error: Unable to fetch data");
         }
-        
+
         this.apiData = {
           id: Math.random().toString(36).substr(2, 9),
           timestamp: new Date().toISOString(),
           randomValue: Math.floor(Math.random() * 1000),
-          status: 'success',
-          userAgent: navigator.userAgent.split(' ')[0],
-          language: navigator.language
-        }
-        
-        this.logChange('API data fetched successfully')
+          status: "success",
+          userAgent: navigator.userAgent.split(" ")[0],
+          language: navigator.language,
+        };
+
+        this.logChange("API data fetched successfully");
       } catch (error) {
-        this.apiError = error.message
-        this.logChange(`API error: ${error.message}`)
+        this.apiError = error.message;
+        this.logChange(`API error: ${error.message}`);
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
-    
+
     formatKey(key) {
-      return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
-    }
-  }
-}
+      return key
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (str) => str.toUpperCase());
+    },
+  },
+};
 </script>
 
 <style scoped>
 .advanced-demo {
   margin: 30px 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
 }
 
 .demo-header {
@@ -376,7 +410,8 @@ export default {
   gap: 10px;
 }
 
-.theme-toggle, .randomize-btn {
+.theme-toggle,
+.randomize-btn {
   padding: 8px 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.1);
@@ -387,7 +422,8 @@ export default {
   font-size: 14px;
 }
 
-.theme-toggle:hover, .randomize-btn:hover {
+.theme-toggle:hover,
+.randomize-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
@@ -485,7 +521,8 @@ export default {
   color: #2c3e50;
 }
 
-.form-group input, .form-group select {
+.form-group input,
+.form-group select {
   padding: 12px;
   border: 2px solid #e1e4e8;
   border-radius: 6px;
@@ -493,7 +530,8 @@ export default {
   transition: border-color 0.3s ease;
 }
 
-.form-group input:focus, .form-group select:focus {
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: #3eaf7c;
 }
@@ -695,8 +733,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .api-result {
@@ -770,11 +812,11 @@ export default {
     gap: 15px;
     text-align: center;
   }
-  
+
   .demo-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .counter-group {
     flex-direction: column;
     gap: 10px;

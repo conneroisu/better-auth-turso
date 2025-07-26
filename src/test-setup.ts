@@ -1,15 +1,24 @@
-import { beforeAll, afterAll, afterEach } from "vitest";
+// Test setup file for Vitest
+// This file is executed before running tests
 
-// Global test setup
-beforeAll(() => {
-  // Set up any global test configuration
-  process.env.NODE_ENV = "test";
-});
+// Set up global test environment
+globalThis.__testClient = undefined;
+globalThis.__numericTestClient = undefined;
 
-afterAll(() => {
-  // Clean up after all tests
-});
+// Mock console methods if needed for cleaner test output
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
 
-afterEach(() => {
-  // Clean up after each test
-});
+// Helper to restore console in case of cleanup
+export function restoreConsole() {
+  console.log = originalConsoleLog;
+  console.error = originalConsoleError;
+}
+
+// Add any global test utilities here
+export function createClient(config: any) {
+  // Dynamic import to avoid circular dependencies
+  return import("better-sqlite3").then(({ default: Database }) => {
+    return new Database(config.url || ":memory:");
+  });
+}
