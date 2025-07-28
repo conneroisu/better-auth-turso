@@ -19,7 +19,7 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 ### Our Standards
 
-- Be respectful and inclusive
+- Be respectful
 - Focus on constructive feedback
 - Accept responsibility for mistakes
 - Show empathy towards other community members

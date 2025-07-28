@@ -14,14 +14,15 @@
     "db:migrate": "npx @better-auth/cli@latest migrate"
   },
   "dependencies": {
-    "next": "^15.1.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "@tursodatabase/turso": "^0.1.2",
+    "autoprefixer": "^10.4.20",
     "better-auth": "latest",
     "better-auth-turso": "file:../../",
-    "tailwindcss": "^3.4.17",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49"
+    "next": "^15.1.4",
+    "postcss": "^8.4.49",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
