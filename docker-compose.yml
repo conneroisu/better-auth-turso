@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  # Development environment
+  app-dev:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3000:3000"
+      - "5555:5555" # For additional dev tools
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/examples/nextjs/node_modules
+    environment:
+      - NODE_ENV=development
+      - TURSO_DATABASE_URL=file:./dev.db
+      - TURSO_AUTH_TOKEN=""
+    working_dir: /app/examples/nextjs
+    command: bun dev
+    profiles:
+      - dev
+
+  # Production-like environment
+  app-prod:
+    build:
+      context: .
+      target: runner
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-file:./prod.db}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
+    profiles:
+      - prod
+
+  # Turso CLI for local development (if needed)
+  turso-cli:
+    image: alpine:latest
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: sh -c "apk add --no-cache curl && curl -sSfL https://get.tur.so/install.sh | bash && sleep infinity"
+    profiles:
+      - tools
+
+  # Database management
+  db-setup:
+    image: alpine:latest
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: sh -c "touch dev.db && echo 'Database file created'"
+    profiles:
+      - setup
+
+networks:
+  default:
+    name: better-auth-turso
+
+volumes:
+  node_modules:
+  nextjs_node_modules:

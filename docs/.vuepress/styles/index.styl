@@ -1,0 +1,687 @@
+// Custom styles for VuePress
+.content {
+  // Custom content styling
+  max-width: 800px;
+  
+  // Enhanced code blocks
+  pre {
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    
+    code {
+      font-size: 0.9em;
+      line-height: 1.5;
+    }
+  }
+  
+  // Custom containers styling
+  .custom-block {
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    border-left: 4px solid;
+    
+    &.tip {
+      background-color: #f3f5f7;
+      border-color: #42b983;
+      
+      .custom-block-title {
+        color: #42b983;
+        font-weight: 600;
+      }
+    }
+    
+    &.warning {
+      background-color: #fffbf0;
+      border-color: #e7c000;
+      
+      .custom-block-title {
+        color: #b29400;
+        font-weight: 600;
+      }
+    }
+    
+    &.danger {
+      background-color: #ffe6e6;
+      border-color: #c00;
+      
+      .custom-block-title {
+        color: #900;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  // Table styling
+  table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    display: block;
+    width: 100%;
+    overflow: auto;
+    
+    tr {
+      border-top: 1px solid #c6cbd1;
+      
+      &:nth-child(2n) {
+        background-color: #f6f8fa;
+      }
+    }
+    
+    th, td {
+      border: 1px solid #dfe2e5;
+      padding: 0.6em 1em;
+    }
+    
+    th {
+      background-color: #f1f3f4;
+      font-weight: 600;
+    }
+  }
+  
+  // Badge styling
+  .badge {
+    border-radius: 3px;
+    color: #fff;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    margin: 0 0.25rem;
+    padding: 0.25em 0.5em;
+    text-align: center;
+    vertical-align: baseline;
+    white-space: nowrap;
+    
+    &.tip {
+      background-color: #42b983;
+    }
+    
+    &.warning {
+      background-color: #e7c000;
+    }
+    
+    &.error {
+      background-color: #da5961;
+    }
+  }
+  
+  // Responsive images
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  // Enhanced blockquotes
+  blockquote {
+    border-left: 4px solid #dfe2e5;
+    color: #6a737d;
+    margin: 0 0 1rem 0;
+    padding: 0 1rem;
+    
+    p {
+      margin: 0.5rem 0;
+    }
+  }
+  
+  // Code inline styling
+  code {
+    background-color: rgba(27, 31, 35, 0.05);
+    border-radius: 3px;
+    color: #476582;
+    font-size: 0.85em;
+    margin: 0;
+    padding: 0.2em 0.4em;
+  }
+  
+  // Enhanced lists
+  ul, ol {
+    li {
+      margin: 0.25rem 0;
+      
+      // Task lists
+      &.task-list-item {
+        list-style: none;
+        margin-left: -1.5em;
+        
+        input[type="checkbox"] {
+          margin-right: 0.5em;
+        }
+      }
+    }
+  }
+}
+
+// Homepage hero section
+.hero {
+  text-align: center;
+  
+  img {
+    max-width: 280px;
+    max-height: 280px;
+    display: block;
+    margin: 3rem auto 1.5rem;
+  }
+  
+  h1 {
+    font-size: 3rem;
+    margin: 0;
+  }
+  
+  .description {
+    color: #6a737d;
+    font-size: 1.6rem;
+    line-height: 1.3;
+    margin: 1.8rem auto;
+    max-width: 35rem;
+  }
+  
+  .action-button {
+    background-color: #3eaf7c;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    display: inline-block;
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin: 1rem 0.5rem;
+    padding: 0.8rem 1.6rem;
+    text-decoration: none;
+    transition: background-color 0.1s ease;
+    
+    &:hover {
+      background-color: #369870;
+    }
+  }
+}
+
+// Features section
+.features {
+  border-top: 1px solid #eaecef;
+  margin-top: 2.5rem;
+  padding: 1.2rem 0;
+  
+  .feature {
+    flex-grow: 1;
+    flex-basis: 30%;
+    max-width: 30%;
+    
+    h2 {
+      border-bottom: none;
+      color: #3a5169;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0;
+    }
+    
+    p {
+      color: #4e6e8e;
+      line-height: 1.4;
+    }
+  }
+}
+
+// Navigation enhancements
+.navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  .site-name {
+    font-weight: 600;
+  }
+  
+  .nav-links {
+    .nav-item {
+      .nav-link {
+        transition: color 0.3s ease;
+        
+        &:hover {
+          color: #3eaf7c;
+        }
+      }
+    }
+  }
+}
+
+// Sidebar enhancements
+.sidebar {
+  .sidebar-group {
+    .sidebar-heading {
+      color: #3a5169;
+      font-weight: 600;
+      
+      &:not(.clickable) {
+        opacity: 0.7;
+      }
+    }
+    
+    .sidebar-links {
+      .sidebar-link {
+        transition: color 0.3s ease;
+        
+        &.active {
+          border-left: 4px solid #3eaf7c;
+          color: #3eaf7c;
+          font-weight: 600;
+          padding-left: 1rem;
+        }
+        
+        &:hover {
+          color: #3eaf7c;
+        }
+      }
+    }
+  }
+}
+
+// Advanced animations and transitions
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-20px);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+  80% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(62, 175, 124, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(62, 175, 124, 0.8);
+  }
+}
+
+.page {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Enhanced component styling with animations
+.content {
+  // Staggered animation for list items
+  ul li, ol li {
+    animation: slideInFromLeft 0.4s ease-out;
+    
+    &:nth-child(2) { animation-delay: 0.1s; }
+    &:nth-child(3) { animation-delay: 0.2s; }
+    &:nth-child(4) { animation-delay: 0.3s; }
+    &:nth-child(5) { animation-delay: 0.4s; }
+  }
+  
+  // Enhanced headings with hover effects
+  h1, h2, h3, h4, h5, h6 {
+    transition: all 0.3s ease;
+    position: relative;
+    
+    &:hover {
+      transform: translateX(5px);
+      color: #3eaf7c;
+    }
+    
+    // Animated underline effect
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #3eaf7c, #369870);
+      transition: width 0.3s ease;
+    }
+    
+    &:hover::after {
+      width: 100%;
+    }
+  }
+  
+  // Interactive buttons with enhanced effects
+  button, .action-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      transition: left 0.5s;
+    }
+    
+    &:hover::before {
+      left: 100%;
+    }
+    
+    &:hover {
+      transform: translateY(-2px);
+      animation: glow 2s infinite;
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  
+  // Enhanced code block styling
+  pre[class*="language-"] {
+    position: relative;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+      background-size: 400% 400%;
+      animation: shimmer 3s ease infinite;
+    }
+    
+    // Language indicator
+    &[class*="language-javascript"]::after {
+      content: 'JavaScript';
+    }
+    &[class*="language-vue"]::after {
+      content: 'Vue.js';
+    }
+    &[class*="language-css"]::after {
+      content: 'CSS';
+    }
+    &[class*="language-html"]::after {
+      content: 'HTML';
+    }
+    &[class*="language-bash"]::after {
+      content: 'Bash';
+    }
+    &[class*="language-json"]::after {
+      content: 'JSON';
+    }
+    
+    &::after {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+  }
+  
+  // Animated custom blocks
+  .custom-block {
+    position: relative;
+    overflow: hidden;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+      );
+      transition: left 0.6s;
+    }
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      
+      &::before {
+        left: 100%;
+      }
+    }
+  }
+}
+
+// Enhanced hero section with particle effect
+.hero {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(62, 175, 124, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(69, 183, 209, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
+    animation: particleFloat 20s ease-in-out infinite;
+    z-index: 0;
+  }
+  
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+  
+  img {
+    animation: bounceIn 1s ease-out;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+  }
+  
+  h1 {
+    animation: slideInFromLeft 0.8s ease-out 0.2s both;
+  }
+  
+  .description {
+    animation: slideInFromRight 0.8s ease-out 0.4s both;
+  }
+  
+  .action-button {
+    animation: bounceIn 0.8s ease-out 0.6s both;
+  }
+}
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(120deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(240deg);
+  }
+}
+
+// Enhanced features section
+.features {
+  .feature {
+    animation: fadeIn 0.6s ease-out;
+    transition: all 0.3s ease;
+    
+    &:nth-child(1) { animation-delay: 0.1s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+    
+    &:hover {
+      transform: translateY(-5px);
+      
+      h2 {
+        color: #3eaf7c;
+      }
+    }
+  }
+}
+
+// Smooth scrolling and performance optimizations
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  will-change: auto;
+}
+
+// Print styles
+@media print {
+  .navbar,
+  .sidebar,
+  .page-edit,
+  .page-nav {
+    display: none !important;
+  }
+  
+  .content {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  
+  // Disable animations for print
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
+
+// Advanced responsive design
+@media (max-width: 1200px) {
+  .content h1, .content h2, .content h3 {
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  // Reduce animations on mobile for performance
+  .page {
+    animation: none;
+  }
+  
+  .content ul li, .content ol li {
+    animation: none;
+  }
+  
+  .hero {
+    &::before {
+      animation: none;
+    }
+    
+    img, h1, .description, .action-button {
+      animation: none;
+    }
+  }
+}
+
+// Accessibility improvements
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Dark mode support with enhanced styling
+@media (prefers-color-scheme: dark) {
+  .content {
+    .custom-block {
+      &.tip {
+        background-color: rgba(66, 185, 131, 0.1);
+        border-color: #42b983;
+      }
+      
+      &.warning {
+        background-color: rgba(231, 192, 0, 0.1);
+        border-color: #e7c000;
+      }
+      
+      &.danger {
+        background-color: rgba(204, 0, 0, 0.1);
+        border-color: #c00;
+      }
+    }
+    
+    pre[class*="language-"] {
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  .hero::before {
+    opacity: 0.3;
+  }
+}

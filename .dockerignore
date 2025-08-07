@@ -1,0 +1,65 @@
+# Dependencies
+node_modules
+*/node_modules
+npm-debug.log*
+bun-debug.log*
+
+# Production builds
+dist
+build
+.next
+out
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Development files
+*.log
+logs
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+coverage
+.nyc_output
+test-results
+playwright-report
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+
+# Documentation (keep README.md)
+*.md
+!README.md
+
+# Temporary files
+tmp
+temp
+.tmp
+
+# Cache directories
+.cache
+.parcel-cache
+.turbo
+
+# Miscellaneous
+.eslintcache
+*.tsbuildinfo

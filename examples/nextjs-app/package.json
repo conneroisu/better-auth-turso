@@ -1,0 +1,38 @@
+{
+  "name": "nextjs-better-auth-turso-example",
+  "version": "1.0.0",
+  "description": "Next.js application demonstrating Better Auth with Turso database adapter",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "bun test",
+    "type-check": "tsc --noEmit",
+    "db:generate": "npx @better-auth/cli@latest generate",
+    "db:migrate": "npx @better-auth/cli@latest migrate"
+  },
+  "dependencies": {
+    "@tursodatabase/turso": "^0.1.2",
+    "autoprefixer": "^10.4.20",
+    "better-auth": "latest",
+    "better-auth-turso": "file:../../",
+    "next": "^15.1.4",
+    "postcss": "^8.4.49",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
